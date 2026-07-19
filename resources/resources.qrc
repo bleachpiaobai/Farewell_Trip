@@ -1,0 +1,77 @@
+<RCC>
+    <!-- ── Styles ─────────────────────────────────────── -->
+    <qresource prefix="/styles">
+        <file alias="main.qss">styles/main.qss</file>
+    </qresource>
+
+    <!-- ── Common / Shared Images ─────────────────────── -->
+    <qresource prefix="/images/common">
+        <file alias="reference_q">images/common/Q版设计参考.png</file>
+        <file alias="XIA_Robot.jpg">images/common/XIA_Robot.jpg</file>
+        <file alias="robot_design_realistic.png">images/common/机器人女孩写实风格设计.png</file>
+        <file alias="peach_poem_dynamic.jpg">images/common/梨花诗动态.jpg</file>
+        <file alias="grassland_scene.png">images/common/草地场景生成（去文字）.png</file>
+        <file alias="gen_20260718_1845.jpg">images/common/Generated Image July 18, 2026 - 6_45PM.jpg</file>
+        <file alias="gen_20260718_1908.jpg">images/common/Generated Image July 18, 2026 - 7_08PM.jpg</file>
+        <file alias="gen_20260718_1914.jpg">images/common/Generated Image July 18, 2026 - 7_14PM.jpg</file>
+        <file alias="gen_20260718_2139.jpg">images/common/Generated Image July 18, 2026 - 9_39PM.jpg</file>
+    </qresource>
+
+    <!-- ── Chapter 1: 少女！从沉睡中苏醒 ──────────────── -->
+    <qresource prefix="/images/ch01">
+        <file alias="YAN_Start1.jpg">images/ch01_awaken/YAN_Start1.jpg</file>
+        <file alias="YAN_Start3.jpg">images/ch01_awaken/YAN_Start3.jpg</file>
+        <file alias="gen_20260718_1831.jpg">images/ch01_awaken/Generated Image July 18, 2026 - 6_31PM.jpg</file>
+    </qresource>
+
+    <!-- ── Chapter 2: 少女！决战梨花怪 ────────────────── -->
+    <qresource prefix="/images/ch02">
+        <file alias="Peach_Appear.jpeg">images/ch02_peach/Peach_Appear.jpeg</file>
+        <file alias="YAN_Defeat_Peach.jpeg">images/ch02_peach/YAN_Defeat_Peach.jpeg</file>
+    </qresource>
+
+    <!-- ── Chapter 3: 少女！向天空高举叛逆之拳 ────────── -->
+    <qresource prefix="/images/ch03">
+        <file alias="ref_1784386036744.jpeg">images/ch03_rebellion/1784386036744.jpeg</file>
+        <file alias="XIA_Die1.jpeg">images/ch03_rebellion/XIA_Die1.jpeg</file>
+        <file alias="XIA_Die2.jpg">images/ch03_rebellion/XIA_Die2.jpg</file>
+    </qresource>
+
+    <!-- ── Chapter 4: 少女！最后的幸存者 ──────────────── -->
+    <qresource prefix="/images/ch04">
+        <file alias="YAN_Origin.png">images/ch04_survivor/YAN_Origin.png</file>
+        <file alias="YAN_ShangHai.png">images/ch04_survivor/YAN_ShangHai.png</file>
+    </qresource>
+
+    <!-- ── Chapter 5: 少女！银河告别旅行 ──────────────── -->
+    <qresource prefix="/images/ch05">
+        <file alias="YAN_Eating.png">images/ch05_farewell/YAN_Eating.png</file>
+        <file alias="YAN_Farewell.jpg">images/ch05_farewell/YAN_Farewell.jpg</file>
+        <file alias="YAN_Graduate.jpg">images/ch05_farewell/YAN_Graduate.jpg</file>
+        <file alias="YAN_Janpan.png">images/ch05_farewell/YAN_Janpan.png</file>
+        <file alias="YAN_Memory.png">images/ch05_farewell/YAN_Memory.png</file>
+        <file alias="YAN_NewYork.png">images/ch05_farewell/YAN_NewYork.png</file>
+        <file alias="YAN_ShangHai.png">images/ch05_farewell/YAN_ShangHai.png</file>
+        <file alias="YAN_Sleep.jpg">images/ch05_farewell/YAN_Sleep.jpg</file>
+        <file alias="YAN_Train.png">images/ch05_farewell/YAN_Train.png</file>
+    </qresource>
+
+    <!-- ── Videos: Chapter 3 ──────────────────────────── -->
+    <qresource prefix="/videos/ch03">
+        <file alias="action_frame_gen.mp4">videos/ch03_rebellion/动作帧生成.mp4</file>
+    </qresource>
+
+    <!-- ── Videos: Chapter 4 ──────────────────────────── -->
+    <qresource prefix="/videos/ch04">
+        <file alias="Video_YAN_Map.mp4">videos/ch04_survivor/Video_YAN_Map.mp4</file>
+        <file alias="Video_YAN_Tark.mp4">videos/ch04_survivor/Video_YAN_Tark.mp4</file>
+    </qresource>
+
+    <!-- ── Videos: Chapter 5 ──────────────────────────── -->
+    <qresource prefix="/videos/ch05">
+        <file alias="Farewell.mp4">videos/ch05_farewell/Farewell.mp4</file>
+    </qresource>
+
+    <!-- ── Music (reserved for future) ────────────────── -->
+    <qresource prefix="/music"/>
+</RCC>

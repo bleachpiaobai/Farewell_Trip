@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(qmake --version)",
+      "Bash(qmake6 --version)",
+      "Bash(cmake --version)",
+      "Bash(cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ../..)",
+      "Bash(where cmake *)",
+      "Read(//f/QT/**)",
+      "Bash(cmake -B build -G \"MinGW Makefiles\" -DCMAKE_PREFIX_PATH=\"C:\\\\Qt\\\\6.8.0\\\\mingw_64\")",
+      "Read(//c//**)",
+      "Read(//c/Qt/**)",
+      "Read(//d//**)",
+      "Bash(/f/STM32ToolBox/STM32CubeCLT_1.17.0/CMake/bin/cmake.exe *)",
+      "Bash(./Farewell_Trip.exe)",
+      "Bash(kill %1)",
+      "Bash(taskkill /f /im Farewell_Trip.exe)",
+      "Bash(powershell -Command \"Get-Process -Name Farewell_Trip -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(mv \"images/少女！向天空高举叛逆之拳/动作帧生成.mp4\" videos/ch03_rebellion/)",
+      "Bash(rmdir \"images/少女！向天空高举叛逆之拳\")",
+      "Bash(mv \"images/少女！最后的幸存者\"/Video_YAN_Tark.mp4 videos/ch04_survivor/)",
+      "Bash(mv \"images/少女！最后的幸存者\"/Video_YAN_Map.mp4 videos/ch04_survivor/)",
+      "Bash(rmdir \"images/少女！最后的幸存者\")",
+      "Bash(mv \"images/少女！银河告别旅行\"/Farewell.mp4 videos/ch05_farewell/)",
+      "Bash(rmdir \"images/少女！银河告别旅行\")",
+      "Bash(gh auth *)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
