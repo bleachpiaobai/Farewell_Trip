@@ -1,0 +1,121 @@
+/* Farewell_Trip — Main Stylesheet */
+
+/* ============================================================
+   Global
+   ============================================================ */
+* {
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+}
+
+/* ============================================================
+   Dialogue Box
+   ============================================================ */
+DialogueBox {
+    background: transparent;
+}
+
+DialogueBox QLabel#nameLabel {
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 4px 16px;
+    background: rgba(255, 255, 255, 30);
+    border-radius: 4px;
+}
+
+DialogueBox QLabel#textLabel {
+    color: #EAEAEA;
+    font-size: 18px;
+    padding: 8px 20px;
+    line-height: 1.6;
+}
+
+DialogueBox QLabel#nextIndicator {
+    color: rgba(255, 255, 255, 180);
+    font-size: 14px;
+}
+
+/* ============================================================
+   Main Menu
+   ============================================================ */
+MainMenu {
+    background: qlineargradient(x1:0 y1:0, x2:0 y2:1,
+        stop:0 #0a0a1a, stop:0.5 #151530, stop:1 #0a0a1a);
+}
+
+MainMenu QPushButton {
+    color: #EAEAEA;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 12px 48px;
+    border: 2px solid rgba(255, 255, 255, 80);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 15);
+    min-width: 200px;
+}
+
+MainMenu QPushButton:hover {
+    background: rgba(255, 255, 255, 30);
+    border-color: rgba(255, 255, 255, 200);
+}
+
+MainMenu QPushButton:pressed {
+    background: rgba(255, 255, 255, 50);
+}
+
+/* ============================================================
+   HUD
+   ============================================================ */
+HUD QLabel#sceneTitle {
+    color: #FFFFFF;
+    font-size: 22px;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 140);
+    padding: 6px 18px;
+    border-radius: 4px;
+}
+
+HUD QLabel#hintText {
+    color: #CCCCCC;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 120);
+    padding: 4px 12px;
+    border-radius: 3px;
+}
+
+HUD QProgressBar {
+    border: 1px solid rgba(255, 255, 255, 60);
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 160);
+    text-align: center;
+    color: white;
+    font-size: 12px;
+}
+
+HUD QProgressBar::chunk {
+    background: qlineargradient(x1:0 y1:0, x2:1 y2:0,
+        stop:0 #D94A4A, stop:1 #FF6B6B);
+    border-radius: 2px;
+}
+
+/* ============================================================
+   Pause Menu
+   ============================================================ */
+PauseMenu {
+    background: rgba(0, 0, 0, 180);
+}
+
+PauseMenu QPushButton {
+    color: #EAEAEA;
+    font-size: 22px;
+    padding: 10px 40px;
+    border: 1px solid rgba(255, 255, 255, 60);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 10);
+    min-width: 180px;
+}
+
+PauseMenu QPushButton:hover {
+    background: rgba(255, 255, 255, 25);
+    border-color: rgba(255, 255, 255, 180);
+}
