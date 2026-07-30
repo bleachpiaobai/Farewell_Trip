@@ -1,147 +1,34 @@
 <RCC>
-    <!-- ── Styles ─────────────────────────────────────── -->
+    <!-- Stylesheet -->
     <qresource prefix="/styles">
         <file alias="main.qss">styles/main.qss</file>
     </qresource>
 
-    <!-- ── Menu ───────────────────────────────────────── -->
-    <qresource prefix="/images/menu">
-        <file alias="menu.png">images/menu.png</file>
+    <!-- Title Bar Icons -->
+    <qresource prefix="/images/ui">
+        <file alias="close.png">../icon/close.png</file>
+        <file alias="max.png">../icon/max.png</file>
+        <file alias="mini.png">../icon/mini.png</file>
     </qresource>
 
-    <!-- ── Chapter 1: 少女！从沉睡中苏醒 ──────────────── -->
-    <qresource prefix="/images/ch01">
-        <file alias="YAN_Start1.png">images/ch01_awaken/YAN_Start1.png</file>
-        <file alias="YAN_Start2.png">images/ch01_awaken/YAN_Start2.png</file>
-        <file alias="YAN_Start3.png">images/ch01_awaken/YAN_Start3.png</file>
-    </qresource>
+    <!--
+      ALL images (~181 MB) and videos are COPIED to the build output
+      by CMake and loaded from disk via GameConfig::imagePath().
 
-    <!-- ── Chapter 2: 少女！决战梨花怪 ────────────────── -->
-    <qresource prefix="/images/ch02">
-        <file alias="YAN_Appear_Peach.png">images/ch02_peach/YAN_Appear_Peach.png</file>
-        <file alias="YAN_Fight_Peach.png">images/ch02_peach/YAN_Fight_Peach.png</file>
-        <file alias="YAN_Defeat_Peach.png">images/ch02_peach/YAN_Defeat_Peach.png</file>
-    </qresource>
+      Code uses :/images/... prefix; GameConfig converts to
+        <appdir>/images/...  at runtime.
 
-    <!-- ── Chapter 3: 少女！向天空高举叛逆之拳 ────────── -->
-    <qresource prefix="/images/ch03">
-        <file alias="YAN_Fight_XIA.png">images/ch03_rebellion/YAN_Fight_XIA.png</file>
-        <file alias="XIA_Die1.png">images/ch03_rebellion/XIA_Die1.png</file>
-        <file alias="XIA_Die2.png">images/ch03_rebellion/XIA_Die2.png</file>
-    </qresource>
-
-    <!-- ── Chapter 4: 少女！最后的幸存者 ──────────────── -->
-    <qresource prefix="/images/ch04">
-        <file alias="YAN_ShangHai.png">images/ch04_survivor/YAN_ShangHai.png</file>
-    </qresource>
-
-    <!-- ── Chapter 5: 少女！银河告别旅行 ──────────────── -->
-    <qresource prefix="/images/ch05">
-        <file alias="YAN_Chirsmas.png">images/ch05_farewell/YAN_Chirsmas.png</file>
-        <file alias="YAN_Eating.png">images/ch05_farewell/YAN_Eating.png</file>
-        <file alias="YAN_Farewell.jpg">images/ch05_farewell/YAN_Farewell.jpg</file>
-        <file alias="YAN_Graduate.jpg">images/ch05_farewell/YAN_Graduate.jpg</file>
-        <file alias="YAN_Janpan.png">images/ch05_farewell/YAN_Janpan.png</file>
-        <file alias="YAN_Memory.png">images/ch05_farewell/YAN_Memory.png</file>
-        <file alias="YAN_NewYork.png">images/ch05_farewell/YAN_NewYork.png</file>
-        <file alias="YAN_ShangHai.png">images/ch05_farewell/YAN_ShangHai.png</file>
-        <file alias="YAN_Sleep.png">images/ch05_farewell/YAN_Sleep.png</file>
-        <file alias="YAN_Train.jpg">images/ch05_farewell/YAN_Train.jpg</file>
-    </qresource>
-
-    <!-- ── Map Sprites ────────────────────────────────── -->
-    <qresource prefix="/images/maps">
-        <file alias="sunflower.png">images/Map/向日葵/修改精灵图文件(1).png</file>
-        <file alias="skybridge.png">images/Map/天桥/修改精灵图文件(2).png</file>
-        <file alias="ruins.png">images/Map/废墟/修改精灵图文件(6).png</file>
-        <file alias="peach_forest.png">images/Map/桃林/修改精灵图文件(4).png</file>
-        <file alias="newyork.png">images/Map/纽约/修改精灵图文件(3).png</file>
-        <file alias="snow_mountain.png">images/Map/雪山/修改精灵图文件(5).png</file>
-    </qresource>
-
-    <!-- ── YAN Action Sprites ─────────────────────────── -->
-    <qresource prefix="/images/yan_action/walk">
-        <file alias="1.png">images/YAN_Action/walk/1.png</file>
-        <file alias="2.png">images/YAN_Action/walk/2.png</file>
-        <file alias="3.png">images/YAN_Action/walk/3.png</file>
-        <file alias="4.png">images/YAN_Action/walk/4.png</file>
-        <file alias="5.png">images/YAN_Action/walk/5.png</file>
-        <file alias="6.png">images/YAN_Action/walk/6.png</file>
-        <file alias="7.png">images/YAN_Action/walk/7.png</file>
-        <file alias="8.png">images/YAN_Action/walk/8.png</file>
-        <file alias="9.png">images/YAN_Action/walk/9.png</file>
-        <file alias="10.png">images/YAN_Action/walk/10.png</file>
-    </qresource>
-    <qresource prefix="/images/yan_action/jump">
-        <file alias="1.png">images/YAN_Action/jump/1.png</file>
-        <file alias="2.png">images/YAN_Action/jump/2.png</file>
-        <file alias="3.png">images/YAN_Action/jump/3.png</file>
-        <file alias="4.png">images/YAN_Action/jump/4.png</file>
-        <file alias="5.png">images/YAN_Action/jump/5.png</file>
-        <file alias="6.png">images/YAN_Action/jump/6.png</file>
-        <file alias="7.png">images/YAN_Action/jump/7.png</file>
-    </qresource>
-    <qresource prefix="/images/yan_action/ack">
-        <file alias="1.png">images/YAN_Action/ack/1.png</file>
-        <file alias="2.png">images/YAN_Action/ack/2.png</file>
-        <file alias="3.png">images/YAN_Action/ack/3.png</file>
-        <file alias="4.png">images/YAN_Action/ack/4.png</file>
-        <file alias="5.png">images/YAN_Action/ack/5.png</file>
-        <file alias="6.png">images/YAN_Action/ack/6.png</file>
-        <file alias="7.png">images/YAN_Action/ack/7.png</file>
-    </qresource>
-    <qresource prefix="/images/yan_action/die">
-        <file alias="1.png">images/YAN_Action/die/1.png</file>
-        <file alias="2.png">images/YAN_Action/die/2.png</file>
-        <file alias="3.png">images/YAN_Action/die/3.png</file>
-        <file alias="4.png">images/YAN_Action/die/4.png</file>
-        <file alias="5.png">images/YAN_Action/die/5.png</file>
-    </qresource>
-    <qresource prefix="/images/yan_action">
-        <file alias="YAN_Action1.png">images/YAN_Action/YAN_Action1.png</file>
-        <file alias="YAN_Action2.png">images/YAN_Action/YAN_Action2.png</file>
-        <file alias="YAN_Robot.png">images/YAN_Action/YAN_Robot.png</file>
-        <file alias="chibi_ref.png">images/YAN_Action/Q版设计参考.png</file>
-    </qresource>
-
-    <!-- ── Peach Action Sprites ───────────────────────── -->
-    <qresource prefix="/images/peach_action">
-        <file alias="1.png">images/Peach_Action/1.png</file>
-        <file alias="2.png">images/Peach_Action/2.png</file>
-        <file alias="3.png">images/Peach_Action/3.png</file>
-        <file alias="4.png">images/Peach_Action/4.png</file>
-        <file alias="5.png">images/Peach_Action/5.png</file>
-        <file alias="6.png">images/Peach_Action/6.png</file>
-        <file alias="poem_anim.png">images/Peach_Action/梨花诗动态.png</file>
-    </qresource>
-
-    <!-- ── XIA Action Sprites ─────────────────────────── -->
-    <qresource prefix="/images/xia_action">
-        <file alias="1.png">images/XIA_Action/XIA_Action1.png</file>
-        <file alias="2.png">images/XIA_Action/XIA_Robot.png</file>
-    </qresource>
-
-    <!-- ── Doc / Reference Images ─────────────────────── -->
-    <qresource prefix="/images/doc">
-        <file alias="gen_20260718_1914.jpg">images/Doc_Action/Generated Image July 18, 2026 - 7_14PM.jpg</file>
-    </qresource>
-
-    <!-- ── Videos: Chapter 3 ──────────────────────────── -->
-    <qresource prefix="/videos/ch03">
-        <file alias="action_frame_gen.mp4">videos/ch03_rebellion/动作帧生成.mp4</file>
-    </qresource>
-
-    <!-- ── Videos: Chapter 4 ──────────────────────────── -->
-    <qresource prefix="/videos/ch04">
-        <file alias="Video_YAN_Map.mp4">videos/ch04_survivor/Video_YAN_Map.mp4</file>
-        <file alias="Video_YAN_Tark.mp4">videos/ch04_survivor/Video_YAN_Tark.mp4</file>
-    </qresource>
-
-    <!-- ── Videos: Chapter 5 ──────────────────────────── -->
-    <qresource prefix="/videos/ch05">
-        <file alias="Farewell.mp4">videos/ch05_farewell/Farewell.mp4</file>
-    </qresource>
-
-    <!-- ── Music (reserved for future) ────────────────── -->
-    <qresource prefix="/music"/>
+      Directory names match Farewell_Trip.doc:
+        resources/images/ch01_awaken/   -> build/images/ch01_awaken/
+        resources/images/ch02_peach/    -> build/images/ch02_peach/
+        resources/images/ch03_rebellion/ -> build/images/ch03_rebellion/
+        resources/images/ch04_survivor/ -> build/images/ch04_survivor/
+        resources/images/ch05_farewell/ -> build/images/ch05_farewell/
+        resources/images/YAN_Action/    -> build/images/YAN_Action/
+        resources/images/Peach_Action/  -> build/images/Peach_Action/
+        resources/images/XIA_Action/    -> build/images/XIA_Action/
+        resources/images/Doc_Action/    -> build/images/Doc_Action/
+        resources/images/Map/           -> build/images/Map/
+        resources/videos/               -> build/videos/
+    -->
 </RCC>

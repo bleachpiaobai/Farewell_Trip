@@ -28,7 +28,7 @@ void GameScene::setBackgroundColor(const QColor& color)
 void GameScene::setBackgroundImage(const QString& qrcPath)
 {
     if (m_imageBg)
-        m_imageBg->setImage(qrcPath);
+        m_imageBg->setImage(GameConfig::imagePath(qrcPath));
 }
 
 void GameScene::clearBackgroundImage()

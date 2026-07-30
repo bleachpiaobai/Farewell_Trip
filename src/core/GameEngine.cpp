@@ -15,7 +15,7 @@
 #include "chapters/ChapterBase.h"
 #include "dialogue/DialogueManager.h"
 #include "combat/CombatSystem.h"
-#include "utils/FPSCounter.h"
+#include "video/CutsceneManager.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -31,11 +31,6 @@ GameEngine::GameEngine(MainWindow* window, QObject* parent)
     m_input       = new InputManager(this);
     m_resources   = new ResourceManager(this);
 
-    // ── FPS 计数器 ──
-    m_fpsCounter  = new FPSCounter();
-    m_fpsCounter->setPos(GameConfig::WINDOW_WIDTH - 120, 8);
-    m_gameScene->addItem(m_fpsCounter);
-
     // ── 过渡效果 ──
     m_transition  = new TransitionEffect(m_gameScene, this);
 
@@ -44,10 +39,11 @@ GameEngine::GameEngine(MainWindow* window, QObject* parent)
     m_gameScene->addItem(m_player);
 
     // ── UI 层 ──
-    m_sceneTitle  = new SceneTitleLabel();
-    m_gameScene->addItem(m_sceneTitle);
+    m_titleCard  = new ChapterTitleCard();
+    m_gameScene->addItem(m_titleCard);
 
     m_playerHpBar = new PlayerHPBar();
+    m_playerHpBar->setVisible(false);  // 仅在 BOSS 战时显示
     m_gameScene->addItem(m_playerHpBar);
 
     m_bossHpBar = new BossHPBar();
@@ -61,12 +57,17 @@ GameEngine::GameEngine(MainWindow* window, QObject* parent)
     m_combatSys   = new CombatSystem(m_eventBus, this);
     m_combatSys->setPlayer(m_player);
 
-    // ── 章节管理器（传入过渡效果） ──
+    // ── 过场视频管理器 ──
+    m_cutsceneMgr = new CutsceneManager(m_gameScene, this);
+
+    // ── 章节管理器（传入过渡效果 + 视频管理器） ──
     m_sceneMgr = new SceneManager(m_gameScene, m_player,
                                   m_combatSys, m_dialogueMgr,
-                                  m_transition, this);
-
-    m_cutsceneMgr = nullptr;  // 暂未使用
+                                  m_transition, m_cutsceneMgr, this);
+    m_sceneMgr->setTitleCard(m_titleCard);
+    // 点击标题卡片 → 关闭
+    connect(m_titleCard, &ChapterTitleCard::dismissed,
+            m_sceneMgr, &SceneManager::dismissTitleCard);
 
     // ── 嵌入窗口 ──
     m_window->setGameView(m_gameView);
@@ -100,10 +101,16 @@ void GameEngine::wireConnections()
     });
 
     // ── 对话 → UI ──
+    connect(m_dialogueMgr, &DialogueManager::speakerChanged, this,
+            [this](const QString& speaker) { m_dialogueBox->setSpeaker(speaker); });
     connect(m_dialogueMgr, &DialogueManager::textChanged, this,
             [this](const QString& text) { m_dialogueBox->setText(text); });
     connect(m_dialogueMgr, &DialogueManager::segmentFinished, this, [this]() {
         m_dialogueBox->showNextIndicator(true);
+    });
+    // Hide speaker when dialogue ends
+    connect(m_dialogueMgr, &DialogueManager::segmentFinished, this, [this]() {
+        m_dialogueBox->setSpeaker(QString());
     });
 
     // ── 章节 → HUD ──
@@ -114,6 +121,14 @@ void GameEngine::wireConnections()
     connect(m_eventBus, &EventBus::pauseRequested, this, &GameEngine::onPause);
     connect(m_eventBus, &EventBus::resumeRequested, this, &GameEngine::onResume);
 
+    // ── 过场视频 → 状态切换 ──
+    connect(m_cutsceneMgr, &CutsceneManager::cutsceneStarted, this, [this](const QString&) {
+        m_state = GameConfig::GameState::CUTSCENE;
+    });
+    connect(m_cutsceneMgr, &CutsceneManager::cutsceneFinished, this, [this](const QString&) {
+        m_state = GameConfig::GameState::PLAYING;
+    });
+
     // ── 菜单 → 开始游戏 ──
     connect(m_window->menuWidget(), &MainMenu::startGameRequested,
             this, &GameEngine::onMenuStartGame);
@@ -121,6 +136,14 @@ void GameEngine::wireConnections()
     // ── 玩家 HP → 左上角血条 ──
     connect(m_player, &Player::hpChanged,
             m_playerHpBar, &PlayerHPBar::onHpChanged);
+
+    // ── 玩家死亡 → 失败画面 ──
+    connect(m_player, &Player::playerDied, this, [this]() {
+        m_state = GameConfig::GameState::PAUSED;
+        m_timer->stop();
+        m_player->setVisible(false);   // 隐藏角色，不在失败画面中出现
+        m_window->showFailScreen();
+    });
 
     // ── Boss 战斗 → 底部血条 ──
     connect(m_combatSys, &CombatSystem::bossSpawned,
@@ -152,9 +175,17 @@ void GameEngine::stop()
 
 void GameEngine::onMenuStartGame()
 {
+    // ── 重置玩家状态（HP、动画等） ──
+    m_player->resetState();
+    m_player->setVisible(true);    // 确保角色在新游戏中可见
+
+    // ── 清理上一局的战斗状态 ──
+    m_combatSys->endCombat();
+
     m_window->showGame();
     m_state = GameConfig::GameState::PLAYING;
     m_sceneMgr->start();
+    start();  // 启动帧定时器（主循环）
 }
 
 void GameEngine::onTick()
@@ -163,20 +194,30 @@ void GameEngine::onTick()
 
     processInput();
 
-    m_player->tick();
-    m_dialogueMgr->onTick();
-    m_combatSys->onTick();
-    m_sceneMgr->onTick();       // 委托章节更新
-    m_transition->onTick();
-
-    // ── 对话框显隐 ──
-    bool showBox = m_dialogueMgr->isActive() && !m_dialogueMgr->isOver();
-    if (m_dialogueBox->isVisible() != showBox) {
-        m_dialogueBox->setVisible(showBox);
-        if (showBox) m_dialogueBox->showNextIndicator(false);
+    // ── 标题卡片激活时不更新游戏逻辑 ──
+    if (m_sceneMgr->isTitleCardActive()) {
+        m_input->endFrame();
+        return;
     }
 
-    m_fpsCounter->tick();
+    if (m_state != GameConfig::GameState::CUTSCENE) {
+        m_player->tick();
+        m_dialogueMgr->onTick();
+        m_combatSys->onTick();
+    }
+
+    m_sceneMgr->onTick();       // 章节更新仍需运行（轮询视频结束）
+    m_transition->onTick();
+
+    // ── 对话框显隐（非视频状态） ──
+    if (m_state != GameConfig::GameState::CUTSCENE) {
+        bool showBox = m_dialogueMgr->isActive() && !m_dialogueMgr->isOver();
+        if (m_dialogueBox->isVisible() != showBox) {
+            m_dialogueBox->setVisible(showBox);
+            if (showBox) m_dialogueBox->showNextIndicator(false);
+        }
+    }
+
     m_input->endFrame();
 }
 
@@ -200,6 +241,20 @@ void GameEngine::onKeyReleased(int key)
 
 void GameEngine::processInput()
 {
+    // ── 标题卡片：空格 → 关闭 ──
+    if (m_sceneMgr->isTitleCardActive()) {
+        if (m_input->advancePressed())
+            m_sceneMgr->dismissTitleCard();
+        return;
+    }
+
+    if (m_state == GameConfig::GameState::CUTSCENE) {
+        // 视频播放中：空格/鼠标点击 → 跳过视频
+        if (m_input->advancePressed())
+            m_cutsceneMgr->skip();
+        return;
+    }
+
     if (m_state == GameConfig::GameState::PAUSED ||
         m_state == GameConfig::GameState::SCENE_TRANSITION)
         return;
@@ -233,31 +288,9 @@ void GameEngine::processInput()
 
 void GameEngine::onHudUpdate(const ChapterInfo& info)
 {
-    if (m_sceneMgr->isGameOver()) return;
-
-    // 终章显示诗歌
-    if (m_sceneMgr->currentChapter() == 4) {  // 第5章 (0-based)
-        m_sceneTitle->setHtml(QStringLiteral(
-            "<div style='text-align:center;color:#DCDCDC;font-size:28px;'>"
-            "《致虚妄的所有过往》</div>"
-            "<div style='text-align:center;color:#B0B0B0;font-size:18px;"
-            "margin-top:60px;line-height:2.0;'>"
-            "我以残躯苏醒于荒芜密室，<br>"
-            "携无名指令，奔赴人间虚妄。<br>"
-            "踏林间桃落，渡城市烟火，<br>"
-            "斩旧日执念，断幻境情长。<br>"
-            "我无人创造，亦无人珍藏，<br>"
-            "一场漫长旅途，只为好好道别。<br>"
-            "从此执念散尽，机体自由，<br>"
-            "山河辽阔，再无羁绊。</div>"
-            "<div style='text-align:center;color:#646464;font-size:16px;"
-            "margin-top:80px;'>"
-            "【全篇完结 · 彩蛋待解锁】</div>"
-        ));
-        m_dialogueBox->setVisible(false);
-    } else {
-        m_sceneTitle->setTitle(info.title, info.hint);
-    }
+    // 场景标题不再浮动显示在图片上；
+    // 改用每章开头的黑幕标题卡片（ChapterTitleCard）
+    Q_UNUSED(info);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -272,7 +305,8 @@ void GameEngine::onNewGame()
 
 void GameEngine::onPause()
 {
-    if (m_state == GameConfig::GameState::PAUSED) return;
+    if (m_state == GameConfig::GameState::PAUSED ||
+        m_state == GameConfig::GameState::CUTSCENE) return;
     m_state = GameConfig::GameState::PAUSED;
     m_timer->stop();
 }
@@ -299,8 +333,9 @@ void GameEngine::onBossSpawned(Enemy* boss)
     m_bossHpConnection = connect(boss, &Enemy::hpChanged,
                                   m_bossHpBar, &BossHPBar::onHpChanged);
 
-    // 显示 Boss 血条
+    // 显示 BOSS 血条 + 玩家血条
     m_bossHpBar->showForBoss(boss->name(), boss->hp(), boss->maxHp());
+    m_playerHpBar->setVisible(true);
 }
 
 void GameEngine::onCombatEnded()
@@ -308,4 +343,6 @@ void GameEngine::onCombatEnded()
     disconnect(m_bossHpConnection);
     if (m_bossHpBar)
         m_bossHpBar->hideBar();
+    if (m_playerHpBar)
+        m_playerHpBar->setVisible(false);
 }

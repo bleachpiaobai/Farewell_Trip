@@ -2,8 +2,24 @@
 #define GAMECONFIG_H
 
 #include <QString>
+#include <QCoreApplication>
+#include <QDir>
 
 namespace GameConfig {
+
+// ── Resource path helper ───────────────────────────
+// Converts Qt resource paths (:/images/...) to filesystem paths.
+// Images are copied to build dir by CMake and loaded from disk at runtime.
+// Directory names match Farewell_Trip.doc (e.g. ch01_awaken, ch02_peach, ...).
+inline QString imagePath(const QString& qrcPath) {
+    static const QString PREFIX = QStringLiteral(":/images/");
+    if (qrcPath.startsWith(PREFIX)) {
+        return QCoreApplication::applicationDirPath()
+               + QStringLiteral("/images/")
+               + qrcPath.mid(PREFIX.size());
+    }
+    return qrcPath;  // keep non-image resources as-is (e.g. :/styles/)
+}
 
 // ── Window ──────────────────────────────────────────
 constexpr int WINDOW_WIDTH  = 1280;
@@ -19,15 +35,15 @@ constexpr int PLAYER_HP          = 10;
 constexpr int ATTACK_RANGE       = 100;         // must be within 100 px
 constexpr int PLAYER_DAMAGE     = 2;
 constexpr int ATTACK_COOLDOWN    = 12;          // frames
-constexpr qreal PLAYER_GROUND_Y  = 550.0;       // Y coordinate on ground
-constexpr qreal JUMP_VELOCITY    = -14.0;       // initial upward speed (px/frame)
-constexpr qreal GRAVITY          = 0.8;         // downward acceleration per frame
+constexpr qreal PLAYER_GROUND_Y  = 530.0;       // Y coordinate on ground (adjusted for larger sprite H=180)
+constexpr qreal JUMP_VELOCITY    = -16.0;       // initial upward speed (px/frame)
+constexpr qreal GRAVITY          = 0.9;         // downward acceleration per frame
 
 // ── Boss ────────────────────────────────────────────
 constexpr int BOSS_APPROACH_DISTANCE = 100;
 constexpr int PEACH_BOSS_HP   = 80;
 constexpr int EXGIRL_BOSS_HP  = 100;
-constexpr int ZHANAN_BOSS_HP  = 120;
+constexpr int ANGUS_BOSS_HP   = 120;
 
 // ── Scene Exit ──────────────────────────────────────
 constexpr int SCENE_EXIT_X = 1100;            // walk right past this to advance
@@ -101,7 +117,7 @@ namespace PlaceholderColor {
     inline constexpr auto Player      = "#4A90D9";  // steel blue
     inline constexpr auto PeachBoss   = "#E8917E";  // peach pink
     inline constexpr auto ExGirlBoss  = "#D94A8A";  // magenta
-    inline constexpr auto ZhaNanBoss  = "#8B4513";  // brown
+    inline constexpr auto AngusBoss   = "#4A2C2A";  // dark corrupted red-brown
     inline constexpr auto NPC         = "#7B7B7B";  // gray
 }
 

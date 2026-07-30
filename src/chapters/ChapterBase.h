@@ -8,6 +8,7 @@ class Player;
 class CombatSystem;
 class DialogueManager;
 class TransitionEffect;
+class CutsceneManager;
 class Enemy;
 
 // ── 每章统一的接口 ──────────────────────────────
@@ -27,12 +28,14 @@ public:
     // 注入依赖
     void setContext(GameScene* scene, Player* player,
                     CombatSystem* combat, DialogueManager* dialogue,
-                    TransitionEffect* transition = nullptr) {
+                    TransitionEffect* transition = nullptr,
+                    CutsceneManager* cutscene = nullptr) {
         m_scene      = scene;
         m_player     = player;
         m_combat     = combat;
         m_dialogue   = dialogue;
         m_transition = transition;
+        m_cutscene   = cutscene;
     }
 
     // ── 生命周期 ──
@@ -51,4 +54,5 @@ protected:
     CombatSystem*     m_combat     = nullptr;
     DialogueManager*  m_dialogue   = nullptr;
     TransitionEffect* m_transition = nullptr;
+    CutsceneManager*  m_cutscene   = nullptr;
 };

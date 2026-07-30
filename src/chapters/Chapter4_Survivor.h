@@ -3,10 +3,10 @@
 
 class Enemy;
 
-// ╔══════════════════════════════════════════════════════════╗
-// ║  第四章  少女！最后的幸存者                                ║
-// ║  南京 → 悬空之桥 → 空白终境 → 击败渣男执念                  ║
-// ╚══════════════════════════════════════════════════════════╝
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  第四章  少女！最后的幸存者                                  ║
+// ║  遭遇Angus → BOSS战 → 认出 → 闪回 → 忏悔 → 告别 → 哀悼 → 启程║
+// ╚══════════════════════════════════════════════════════════════╝
 
 class Chapter4_Survivor : public ChapterBase {
     Q_OBJECT
@@ -20,10 +20,10 @@ public:
     ChapterInfo currentInfo() const override;
 
 private:
-    enum Phase { NANJING, AIRBRIDGE, EMPTY_FIGHT, MAN_DEFEAT_DLG, END_DLG };
+    enum Phase { ENCOUNTER, RECOGNIZE, FLASHBACK, CONFESSION, GOODBYE, MOURN, DEPARTURE };
 
-    Phase  m_phase = NANJING;
+    Phase  m_phase = ENCOUNTER;
     Enemy* m_boss  = nullptr;
     bool   m_done  = false;
-    bool   m_bossSpawned = false;
+    bool   m_cutscenePending = false;
 };

@@ -9,12 +9,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+# Resources are loaded from disk via CMake copy + GameConfig::imagePath().
+# Only tiny assets (styles + icons, ~9 KB) are embedded in the .qrc.
+# All images (~181 MB) and videos are copied to the build directory.
+
 find_package(Qt6 6.5 REQUIRED COMPONENTS
     Core
     Gui
     Widgets
     Multimedia
     MultimediaWidgets
+    OpenGLWidgets
 )
 
 qt_standard_project_setup()
@@ -33,6 +38,31 @@ file(GLOB_RECURSE UTILS_SRC    src/utils/*.cpp    src/utils/*.h)
 file(GLOB_RECURSE CHAPTER_SRC  src/chapters/*.cpp src/chapters/*.h)
 
 set(RESOURCES resources/resources.qrc)
+
+# ── Copy video files to build output ──
+file(GLOB_RECURSE VIDEO_FILES
+    resources/videos/*.mp4
+)
+foreach(VIDEO_FILE ${VIDEO_FILES})
+    file(RELATIVE_PATH REL_PATH ${CMAKE_SOURCE_DIR}/resources ${VIDEO_FILE})
+    configure_file(${VIDEO_FILE} ${CMAKE_BINARY_DIR}/${REL_PATH} COPYONLY)
+endforeach()
+
+# ── Copy image files to build output (~181 MB, too large to embed in .qrc) ──
+# Directory names match Farewell_Trip.doc and code :/images/... paths exactly.
+file(COPY resources/images/ch01_awaken/   DESTINATION ${CMAKE_BINARY_DIR}/images/ch01_awaken)
+file(COPY resources/images/ch02_peach/    DESTINATION ${CMAKE_BINARY_DIR}/images/ch02_peach)
+file(COPY resources/images/ch03_rebellion/ DESTINATION ${CMAKE_BINARY_DIR}/images/ch03_rebellion)
+file(COPY resources/images/ch04_survivor/ DESTINATION ${CMAKE_BINARY_DIR}/images/ch04_survivor)
+file(COPY resources/images/ch05_farewell/ DESTINATION ${CMAKE_BINARY_DIR}/images/ch05_farewell)
+file(COPY resources/images/YAN_Action/    DESTINATION ${CMAKE_BINARY_DIR}/images/YAN_Action)
+file(COPY resources/images/Peach_Action/  DESTINATION ${CMAKE_BINARY_DIR}/images/Peach_Action)
+file(COPY resources/images/XIA_Action/    DESTINATION ${CMAKE_BINARY_DIR}/images/XIA_Action)
+file(COPY resources/images/Doc_Action/    DESTINATION ${CMAKE_BINARY_DIR}/images/Doc_Action)
+file(COPY resources/images/Map/           DESTINATION ${CMAKE_BINARY_DIR}/images/Map)
+# Single files
+file(COPY resources/images/menu.png       DESTINATION ${CMAKE_BINARY_DIR}/images)
+file(COPY resources/images/fail.png       DESTINATION ${CMAKE_BINARY_DIR}/images)
 
 qt_add_executable(Farewell_Trip
     WIN32 MACOSX_BUNDLE
@@ -72,6 +102,7 @@ target_link_libraries(Farewell_Trip PRIVATE
     Qt::Widgets
     Qt::Multimedia
     Qt::MultimediaWidgets
+    Qt::OpenGLWidgets
 )
 
 include(GNUInstallDirs)

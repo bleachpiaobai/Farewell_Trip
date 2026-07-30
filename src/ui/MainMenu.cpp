@@ -13,7 +13,7 @@ MainMenu::MainMenu(QWidget* parent)
     setFixedSize(GameConfig::WINDOW_WIDTH, GameConfig::WINDOW_HEIGHT);
 
     // Load menu wallpaper
-    m_bgPixmap.load(":/images/menu/menu.png");
+    m_bgPixmap.load(GameConfig::imagePath(":/images/menu.png"));
 
     // ── Start button ──
     m_btnStart = new QPushButton(QStringLiteral("开始游戏"), this);
@@ -35,14 +35,13 @@ MainMenu::MainMenu(QWidget* parent)
 void MainMenu::paintEvent(QPaintEvent*)
 {
     QPainter painter(this);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
 
-    // Draw background
+    // Draw background scaled to fill the entire widget
     if (!m_bgPixmap.isNull()) {
-        QPixmap scaled = m_bgPixmap.scaled(size(), Qt::KeepAspectRatioByExpanding,
+        QPixmap scaled = m_bgPixmap.scaled(size(), Qt::IgnoreAspectRatio,
                                            Qt::SmoothTransformation);
-        int x = (scaled.width() - width()) / 2;
-        int y = (scaled.height() - height()) / 2;
-        painter.drawPixmap(-x, -y, scaled);
+        painter.drawPixmap(0, 0, scaled);
     } else {
         painter.fillRect(rect(), QColor(10, 10, 26));
     }

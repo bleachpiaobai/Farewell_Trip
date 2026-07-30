@@ -15,10 +15,9 @@ class DialogueManager;
 class CombatSystem;
 class CutsceneManager;
 class TransitionEffect;
-class FPSCounter;
 class Player;
 class Enemy;
-class SceneTitleLabel;
+class ChapterTitleCard;
 class DialogueBox;
 class PlayerHPBar;
 class BossHPBar;
@@ -43,6 +42,7 @@ public:
     SceneManager* scenes()     const { return m_sceneMgr; }
     DialogueManager* dialogue() const { return m_dialogueMgr; }
     CombatSystem*  combat()    const { return m_combatSys; }
+    CutsceneManager* cutscene() const { return m_cutsceneMgr; }
 
 public slots:
     void onNewGame();
@@ -74,11 +74,10 @@ private:
     CombatSystem*    m_combatSys   = nullptr;
     CutsceneManager* m_cutsceneMgr = nullptr;
     TransitionEffect* m_transition = nullptr;
-    FPSCounter*      m_fpsCounter  = nullptr;
 
     // ── 实体 / UI ──
     Player*          m_player      = nullptr;
-    SceneTitleLabel* m_sceneTitle  = nullptr;
+    ChapterTitleCard* m_titleCard  = nullptr;
     DialogueBox*     m_dialogueBox = nullptr;
     PlayerHPBar*     m_playerHpBar = nullptr;
     BossHPBar*       m_bossHpBar   = nullptr;

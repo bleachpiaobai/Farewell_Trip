@@ -10,11 +10,23 @@
 #include "combat/CombatSystem.h"
 #include "dialogue/DialogueManager.h"
 #include "ui/GameScene.h"
+#include "ui/HUD.h"
 #include <QDebug>
+
+// ── 章节名称（黑幕标题） ────────────────────────────
+
+static const char* CHAPTER_NAMES[] = {
+    "第一章\n少女！从沉睡中苏醒",
+    "第二章\n少女！决战桃子怪",
+    "第三章\n少女！向天空高举叛逆之拳",
+    "第四章\n少女！最后的幸存者",
+    "第五章\n少女！银河告别旅行",
+};
 
 SceneManager::SceneManager(GameScene* scene, Player* player,
                            CombatSystem* combat, DialogueManager* dialogue,
                            TransitionEffect* transition,
+                           CutsceneManager* cutscene,
                            QObject* parent)
     : QObject(parent)
     , m_scene(scene)
@@ -22,6 +34,7 @@ SceneManager::SceneManager(GameScene* scene, Player* player,
     , m_combat(combat)
     , m_dialogue(dialogue)
     , m_transition(transition)
+    , m_cutscene(cutscene)
 {
     // ── 创建所有章节 ──
     auto* ch1 = new Chapter1_Awaken(this);
@@ -34,7 +47,7 @@ SceneManager::SceneManager(GameScene* scene, Player* player,
 
     // ── 给每章注入依赖 ──
     for (auto* ch : m_chapters) {
-        ch->setContext(m_scene, m_player, m_combat, m_dialogue, m_transition);
+        ch->setContext(m_scene, m_player, m_combat, m_dialogue, m_transition, m_cutscene);
         connect(ch, &ChapterBase::chapterFinished,
                 this, &SceneManager::onChapterFinished);
     }
@@ -60,21 +73,61 @@ void SceneManager::switchToChapter(int index)
 
     m_index = index;
 
-    // 重置过渡效果（防止残留遮罩）
+    // 重置过渡效果
     if (m_transition)
         m_transition->reset();
 
-    // 进入新章节
-    ChapterBase* ch = m_chapters[m_index];
-    qDebug() << "[Chapter] 进入第" << (m_index + 1) << "章：" << ch->currentInfo().title;
+    // ── 显示黑幕标题 ──
+    if (m_titleCard && index < static_cast<int>(sizeof(CHAPTER_NAMES) / sizeof(CHAPTER_NAMES[0]))) {
+        showTitleCard(index);
+    } else {
+        // Fallback: no title card available, enter directly
+        enterChapter();
+    }
+}
+
+void SceneManager::showTitleCard(int index)
+{
+    m_titleCardActive = true;
+    m_pendingChapter = index;
+
+    m_titleCard->show(QString::fromUtf8(CHAPTER_NAMES[index]));
+
+    qDebug() << "[TitleCard] 显示第" << (index + 1) << "章标题";
+}
+
+void SceneManager::dismissTitleCard()
+{
+    if (!m_titleCardActive) return;
+
+    m_titleCardActive = false;
+    m_titleCard->hide();
+
+    qDebug() << "[TitleCard] 标题关闭，进入章节";
+
+    enterChapter();
+}
+
+void SceneManager::enterChapter()
+{
+    if (m_pendingChapter < 0 || m_pendingChapter >= m_chapters.size()) return;
+
+    int index = m_pendingChapter;
+    m_pendingChapter = -1;
+
+    ChapterBase* ch = m_chapters[index];
+    qDebug() << "[Chapter] 进入第" << (index + 1) << "章：" << ch->currentInfo().title;
     ch->onEnter();
 
-    emit chapterChanged(m_index);
+    emit chapterChanged(index);
     emit hudUpdate(ch->currentInfo());
 }
 
 void SceneManager::onTick()
 {
+    // ── 黑幕标题状态下不更新章节逻辑 ──
+    if (m_titleCardActive) return;
+
     if (m_index < 0 || m_index >= m_chapters.size()) return;
 
     ChapterBase* ch = m_chapters[m_index];

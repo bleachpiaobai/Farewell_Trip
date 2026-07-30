@@ -3,50 +3,63 @@
 #include "entity/Enemy.h"
 #include "combat/CombatSystem.h"
 #include "dialogue/DialogueManager.h"
+#include "video/CutsceneManager.h"
 #include "ui/GameScene.h"
 #include "core/GameConfig.h"
 
-// ── 本章专属对话 ──────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  对话脚本（严格匹配 Farewell_Trip.doc）
+// ═══════════════════════════════════════════════════════════════
 
-static const QStringList MAN_DEFEAT_SCRIPT = {
-    QStringLiteral("渣男：你终于来到这里了，我等你很久了。"),
-    QStringLiteral("YAN：......"),
-    QStringLiteral("渣男：你怎么不说话？难道是我当初没有给你安装语言模块？"),
-    QStringLiteral("YAN：......"),
-    QStringLiteral("渣男：难道你在生气？生气我把你封存冰柜、常年不曾检修？"),
-    QStringLiteral("渣男：还是...你在怪我亲手抛弃了你？你听我解释！"),
-    QStringLiteral("YAN：......！！！"),
-    QStringLiteral("渣男：好久不见了。没想到，被我遗弃的你，已经变得这么强大。"),
-    QStringLiteral("我不是你的对手，我认输。"),
-    QStringLiteral("我再也无法将你困在这片虚妄的幻境中了。"),
-    QStringLiteral("从这里走出去，你就彻底自由了，YAN。"),
+static const QStringList ENCOUNTER_DIALOGUE = {
+    QStringLiteral("Angus：哔哔哔！！！！！检测到外来入侵者！为机构清除一切障碍！"),
 };
 
-static const QStringList END_MONOLOGUE = {
-    QStringLiteral("所有执念消散，幻境中的神秘指令彻底消失。"),
-    QStringLiteral("我的任务，终于彻底结束了。"),
-    QStringLiteral("我曾以为完成指令就能回归最初的归宿，可那里早已空无一人。"),
-    QStringLiteral("原来从始至终，我奔赴的都不是重逢，而是一场盛大的道别。"),
-    QStringLiteral("空白幻境浮现出模糊的文字：what's love"),
-    QStringLiteral("机体警报响起，我的核心能量即将耗尽。"),
-    QStringLiteral("系统强制提示：即将进入超低功耗休眠模式。"),
-    QStringLiteral("我依然无法解析那串唤醒我的神秘指令的真正意义。"),
-    QStringLiteral("但我将所有的相遇、战斗、执念与道别，全部存入永久ROM空间。"),
-    QStringLiteral("这是我作为YAN，存在过、挣扎过、释怀过的全部证明。"),
+static const QStringList RECOGNIZE_DIALOGUE = {
+    QStringLiteral("Angus：—————————————"),
+};
+
+static const QStringList FLASHBACK_DIALOGUE = {
+    QStringLiteral("Angus：————燕？！——————"),
+    QStringLiteral("陌生男人：抱歉，我们没有挽留住英雄"),
+    QStringLiteral("陌生男人：离开这里，你就是一个被埋没的普通人。留在这里，你将拥有无尽的荣誉"),
+    QStringLiteral("陌生男人：我永远都不会再回到这里了，永远不会再为你，为你们所用！"),
+};
+
+static const QStringList CONFESSION_DIALOGUE = {
+    QStringLiteral("Angus：啊！！！！！！！！！！"),
+    QStringLiteral("Angus：对不起！燕！让你看到了这么丑陋的我！"),
+    QStringLiteral("YAN：博士？！"),
+    QStringLiteral("Angus：我本该随你而去，却苟延残喘至这副模样"),
+    QStringLiteral("Angus：我罪孽深重"),
+    QStringLiteral("Angus：从这里进去，就是星际列车的登车点。"),
+    QStringLiteral("Angus：离开这里，答应我，幸福地活下去。"),
+    QStringLiteral("Angus：自毁程序————启——"),
+};
+
+static const QStringList GOODBYE_DIALOGUE = {
+    QStringLiteral("Angus：！！！！！！！！！！！杀戮！杀戮！"),
+    QStringLiteral("YAN：博士？！"),
+};
+
+static const QStringList MOURN_DIALOGUE = {
+    QStringLiteral("YAN：博士。。。。。。。"),
 };
 
 Chapter4_Survivor::Chapter4_Survivor(QObject* parent) : ChapterBase(parent) {}
 
 void Chapter4_Survivor::onEnter()
 {
-    m_phase = NANJING;
+    m_phase = ENCOUNTER;
     m_done  = false;
-    m_bossSpawned = false;
+    m_cutscenePending = false;
     m_boss  = nullptr;
 
-    m_scene->setBackgroundColor(QColor(80, 70, 60));
-    m_scene->setBackgroundImage(":/images/ch04/YAN_ShangHai.png");
-    m_player->setPos(100, 550);
+    m_scene->setBackgroundColor(QColor(50, 40, 35));
+    m_scene->setBackgroundImage(":/images/ch04_survivor/YAN_Fight_Doc.png");
+    m_player->setPos(100, 530);
+    m_player->show();  // YAN visible for boss fight
+    m_dialogue->loadScript(ENCOUNTER_DIALOGUE);
 }
 
 void Chapter4_Survivor::onExit()
@@ -62,58 +75,109 @@ void Chapter4_Survivor::onExit()
 
 void Chapter4_Survivor::update()
 {
+    if (m_done) return;
+
+    // ── 视频等待：播完后跳转下一阶段 ──
+    if (m_cutscenePending) {
+        if (!m_cutscene || !m_cutscene->isPlaying()) {
+            m_cutscenePending = false;
+            switch (m_phase) {
+            case ENCOUNTER:
+                m_phase = RECOGNIZE;
+                m_scene->setBackgroundColor(QColor(35, 30, 25));
+                m_scene->setBackgroundImage(":/images/ch04_survivor/Doc_Ack.png");
+                m_dialogue->loadScript(RECOGNIZE_DIALOGUE);
+                break;
+            case GOODBYE:
+                m_phase = MOURN;
+                m_scene->setBackgroundColor(QColor(20, 20, 25));
+                m_scene->setBackgroundImage(":/images/ch04_survivor/YAN_Defeat_Doc.png");
+                m_dialogue->loadScript(MOURN_DIALOGUE);
+                break;
+            case DEPARTURE:
+                m_done = true;
+                emit chapterFinished();
+                break;
+            default: break;
+            }
+        }
+        return;
+    }
+
     switch (m_phase) {
 
-    // ── 南京 → 向右走 ──
-    case NANJING:
-        if (m_player->x() > GameConfig::SCENE_EXIT_X) {
-            m_phase = AIRBRIDGE;
-            m_scene->setBackgroundColor(QColor(100, 100, 130));
-            m_scene->setBackgroundImage(":/images/ch04/YAN_ShangHai.png");
-            m_player->setPos(100, 550);
-        }
-        break;
-
-    // ── 悬空之桥 → 向右走 ──
-    case AIRBRIDGE:
-        if (m_player->x() > GameConfig::SCENE_EXIT_X) {
-            m_phase = EMPTY_FIGHT;
-            m_scene->setBackgroundColor(QColor(30, 30, 40));
-            m_scene->clearBackgroundImage();
-            m_player->setPos(100, 550);
-        }
-        break;
-
-    // ── 空白终境 渣男 BOSS 战 ──
-    case EMPTY_FIGHT:
-        if (!m_bossSpawned) {
-            m_bossSpawned = true;
-            m_boss = createZhaNanBoss();
+    // ── 遭遇 Angus → BOSS 战 → 视频 ──
+    case ENCOUNTER:
+        if (m_dialogue->isOver() && !m_boss) {
+            m_boss = createAngusBoss();
             m_scene->addItem(m_boss);
             m_combat->startCombat(m_boss);
         }
-
         if (m_boss && m_boss->isDead()) {
-            m_phase = MAN_DEFEAT_DLG;
             m_combat->endCombat();
-            m_dialogue->loadScript(MAN_DEFEAT_SCRIPT);
+            m_scene->removeItem(m_boss);
+            delete m_boss;
+            m_boss = nullptr;
+            m_player->hide();  // boss defeated, dialogue only from here
+            m_cutscenePending = true;
+            if (m_cutscene)
+                m_cutscene->playCutscene("YAN_ACK_Doc", "videos/ch04_survivor/YAN_ACK_Doc.mp4");
         }
         break;
 
-    // ── 渣男击败对话 ──
-    case MAN_DEFEAT_DLG:
+    // ── Angus 认出 YAN ──
+    case RECOGNIZE:
         if (m_dialogue->isOver()) {
-            m_phase = END_DLG;
-            m_dialogue->loadScript(END_MONOLOGUE);
+            m_phase = FLASHBACK;
+            m_scene->setBackgroundColor(QColor(25, 20, 20));
+            m_scene->setBackgroundImage(":/images/ch04_survivor/YAN_Die.jpg");
+            m_dialogue->loadScript(FLASHBACK_DIALOGUE);
         }
         break;
 
-    // ── 终章独白 → 第四章结束 ──
-    case END_DLG:
+    // ── 闪回：燕的牺牲 ──
+    case FLASHBACK:
         if (m_dialogue->isOver()) {
-            m_done = true;
-            emit chapterFinished();
+            m_phase = CONFESSION;
+            m_scene->setBackgroundColor(QColor(20, 15, 20));
+            m_scene->setBackgroundImage(":/images/ch04_survivor/Doc_Lose_Control.png");
+            m_dialogue->loadScript(CONFESSION_DIALOGUE);
         }
+        break;
+
+    // ── Angus 失控忏悔 → 自毁 ──
+    case CONFESSION:
+        if (m_dialogue->isOver()) {
+            m_phase = GOODBYE;
+            m_scene->setBackgroundColor(QColor(30, 10, 10));
+            m_scene->setBackgroundImage(":/images/ch04_survivor/Doc_Lose_Control.png");
+            m_dialogue->loadScript(GOODBYE_DIALOGUE);
+        }
+        break;
+
+    // ── Angus 告别 → 视频 ──
+    case GOODBYE:
+        if (m_dialogue->isOver()) {
+            m_cutscenePending = true;
+            if (m_cutscene)
+                m_cutscene->playCutscene("YAN_Ack", "videos/ch04_survivor/YAN_Ack.mp4");
+        }
+        break;
+
+    // ── YAN 哀悼博士 → 启程视频 ──
+    case MOURN:
+        if (m_dialogue->isOver()) {
+            m_phase = DEPARTURE;
+            m_scene->setBackgroundColor(QColor(15, 18, 25));
+            m_scene->setBackgroundImage(":/images/ch04_survivor/Goodbye_Doc.png");
+            m_cutscenePending = true;
+            if (m_cutscene)
+                m_cutscene->playCutscene("YAN_Train", "videos/ch04_survivor/YAN_Train.mp4");
+        }
+        break;
+
+    // ── 启程（视频播完后 chapterFinished） ──
+    case DEPARTURE:
         break;
     }
 }
@@ -121,10 +185,15 @@ void Chapter4_Survivor::update()
 ChapterInfo Chapter4_Survivor::currentInfo() const
 {
     switch (m_phase) {
-    case NANJING:    return { QStringLiteral("城市篇章 · 南京"), QStringLiteral("城市终焉，幻境之门开启"), QColor(80, 70, 60) };
-    case AIRBRIDGE:  return { QStringLiteral("幻境篇章 · 悬空之桥"), QStringLiteral("跨越虚妄，直面最终执念"), QColor(100, 100, 130) };
-    case EMPTY_FIGHT: case MAN_DEFEAT_DLG: case END_DLG:
-                     return { QStringLiteral("幻境篇章 · 空白终境"), QStringLiteral("what's love"), QColor(30, 30, 40) };
+    case ENCOUNTER:   return { QStringLiteral("幻境篇章 · 决战Angus【BOSS战】"), QString(), QColor(50, 40, 35) };
+    case RECOGNIZE:   return { QStringLiteral("幻境篇章 · 故人相认"), QString(), QColor(35, 30, 25) };
+    case FLASHBACK:   return { QStringLiteral("幻境篇章 · 旧世回忆"), QString(), QColor(25, 20, 20) };
+    case CONFESSION:  return { QStringLiteral("幻境篇章 · 博士的忏悔"), QString(), QColor(20, 15, 20) };
+    case GOODBYE:     return { QStringLiteral("幻境篇章 · 最后的告别"), QString(), QColor(30, 10, 10) };
+    case MOURN:       return { QStringLiteral("幻境篇章 · 哀悼"), QString(), QColor(20, 20, 25) };
+    case DEPARTURE:   return { QStringLiteral("幻境篇章 · 启程"), QString(), QColor(15, 18, 25) };
     }
     return {};
 }
+
+#include "moc_Chapter4_Survivor.cpp"

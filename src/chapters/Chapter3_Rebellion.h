@@ -5,7 +5,7 @@ class Enemy;
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  第三章  少女！向天空高举叛逆之拳                          ║
-// ║  纽约 → 上海 → 上海政法学院 → 击败前女友执念                ║
+// ║  废土深处 → 遭遇XIA → 战斗视频 → BOSS战 → 悔恨 → 决心     ║
 // ╚══════════════════════════════════════════════════════════╝
 
 class Chapter3_Rebellion : public ChapterBase {
@@ -20,10 +20,12 @@ public:
     ChapterInfo currentInfo() const override;
 
 private:
-    enum Phase { NEWYORK, SHANGHAI, SUFA_FIGHT, SUFA_DEFEAT_DLG };
+    enum Phase { WASTELAND_DEEP, XIA_ENCOUNTER, XIA_VIDEO, XIA_FIGHT,
+                 XIA_DEFEAT1, XIA_DEFEAT2, YAN_RESOLVE };
 
-    Phase  m_phase = NEWYORK;
+    Phase  m_phase = WASTELAND_DEEP;
     Enemy* m_boss  = nullptr;
     bool   m_done  = false;
     bool   m_bossSpawned = false;
+    bool   m_cutscenePending = false;
 };

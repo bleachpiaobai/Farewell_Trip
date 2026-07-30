@@ -1,6 +1,26 @@
 #include "Enemy.h"
 #include "animation/SpriteAnimation.h"
 #include "utils/MathUtils.h"
+#include <QtMath>
+#include <QDebug>
+#include <QTransform>
+
+// ── Helper: load frames from QRC prefix ──
+static QList<QPixmap> loadFrames(const QString& prefix, int count, int targetW, int targetH)
+{
+    QList<QPixmap> frames;
+    for (int i = 1; i <= count; i++) {
+        QString path = QString("%1/%2.png").arg(prefix).arg(i);
+        QPixmap pix(path);
+        if (!pix.isNull()) {
+            pix = pix.scaledToHeight(targetH, Qt::SmoothTransformation);
+            frames.append(pix);
+        } else {
+            qWarning() << "Enemy: failed to load frame" << path;
+        }
+    }
+    return frames;
+}
 
 Enemy::Enemy(const QString& name, int maxHp, const QColor& bodyColor,
              QGraphicsItem* parent)
@@ -20,7 +40,7 @@ void Enemy::setSpriteSheet(const QString& qrcPrefix, int frameCount, int msPerFr
         QString path = QString("%1/%2.png").arg(qrcPrefix).arg(i);
         QPixmap pix(path);
         if (!pix.isNull()) {
-            pix = pix.scaled(W, H, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            pix = pix.scaledToHeight(H, Qt::SmoothTransformation);
             frames.append(pix);
         }
     }
@@ -33,12 +53,108 @@ void Enemy::setSpriteSheet(const QString& qrcPrefix, int frameCount, int msPerFr
     m_spriteAnim->setFrames(frames);
     m_spriteAnim->setFrameDuration(msPerFrame);
     connect(m_spriteAnim, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
+    connect(m_spriteAnim, &SpriteAnimation::frameChanged, this, &Enemy::onJumpFrame);
     m_spriteAnim->start();  // always animating (idle animation)
+
+    // 保存基准位置供跳跃使用
+    m_baseX = x();
+    m_baseY = y();
+}
+
+void Enemy::setWalkSprites(const QString& qrcPrefix, int frameCount, int msPerFrame)
+{
+    m_animWalk = new SpriteAnimation(this);
+    m_animWalk->setFrames(loadFrames(qrcPrefix, frameCount, W, H));
+    m_animWalk->setFrameDuration(msPerFrame);
+    connect(m_animWalk, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
+    // 不再连接 onJumpFrame — walk anim 不需要跳跃偏移
+
+    // 用第一帧作为 idle
+    auto frames = m_animWalk->currentFrame();
+    if (!frames.isNull()) {
+        m_idleFrame = frames;
+    }
+
+    // Start looping walk as default
+    playWalkAnim();
+}
+
+void Enemy::setAttackSprites(const QString& qrcPrefix, int frameCount, int msPerFrame)
+{
+    m_animAttack = new SpriteAnimation(this);
+    m_animAttack->setFrames(loadFrames(qrcPrefix, frameCount, W, H));
+    m_animAttack->setFrameDuration(msPerFrame);
+    connect(m_animAttack, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
+}
+
+void Enemy::playWalkAnim()
+{
+    if (!m_animWalk || m_currentAnim == m_animWalk) return;
+    if (m_currentAnim) m_currentAnim->stop();
+    m_currentAnim = m_animWalk;
+    m_animWalk->restart();
+    update();
+}
+
+void Enemy::playAttackAnim()
+{
+    if (!m_animAttack) return;
+    if (m_currentAnim) m_currentAnim->stop();
+    m_currentAnim = m_animAttack;
+    m_animAttack->restart();
+    update();
+}
+
+void Enemy::faceToward(qreal targetX)
+{
+    qreal dx = targetX - x();
+    m_dir = (dx > 0) ? 1 : -1;
+}
+
+void Enemy::moveToward(qreal targetX, qreal speed)
+{
+    qreal dx = targetX - x();
+    // Face the target
+    m_dir = (dx > 0) ? 1 : -1;
+    if (qAbs(dx) < 5.0) return;  // Already close enough
+
+    qreal move = qBound(-speed, dx, speed);
+    setPos(x() + move, y());
+    m_baseX = x();  // Keep jump base position in sync with movement
+}
+
+// ── Jump behavior ─────────────────────────────────────────
+
+void Enemy::enableJumping(qreal jumpHeight, qreal jumpWidth)
+{
+    m_jumpingEnabled = true;
+    m_jumpHeight = jumpHeight;
+    m_jumpWidth  = jumpWidth;
+    m_baseX = x();
+    m_baseY = y();
+}
+
+void Enemy::onJumpFrame(int frameIndex)
+{
+    if (!m_jumpingEnabled || m_dead) return;
+
+    int totalFrames = m_spriteAnim ? m_spriteAnim->frameCount() : 6;
+    if (totalFrames <= 1) return;
+
+    // ── 跳跃轨迹：正弦波模拟抛物线跳跃 ──
+    //  Y轴：sin(0→π) 从地面→最高点→地面（一个完整跳跃弧）
+    //  X轴：sin(0→2π) 左右微微摇摆
+    qreal phase = static_cast<qreal>(frameIndex) / totalFrames;
+    qreal yOffset = -m_jumpHeight * qSin(phase * M_PI);
+    qreal xOffset = m_jumpWidth * qSin(phase * 2.0 * M_PI);
+
+    setPos(m_baseX + xOffset, m_baseY + yOffset);
 }
 
 QRectF Enemy::boundingRect() const
 {
-    return QRectF(-5, -5, W + 10, H + 10);
+    // Extra width for attack sprites (XIA ack: 1022×700 → 204×140 after scale-to-height)
+    return QRectF(-5, -5, W + 80, H + 10);
 }
 
 QPainterPath Enemy::shape() const
@@ -74,6 +190,9 @@ void Enemy::reset()
 {
     m_hp = m_maxHp;
     m_dead = false;
+    if (!m_dead) {
+        playWalkAnim();
+    }
     if (m_spriteAnim) m_spriteAnim->restart();
 }
 
@@ -86,19 +205,25 @@ void Enemy::drawBoss(QPainter* p)
     p->save();
     p->setRenderHint(QPainter::SmoothPixmapTransform);
 
-    // ── Sprite-based drawing ──
-    if (m_spriteAnim && m_spriteAnim->isRunning()) {
-        QPixmap frame = m_spriteAnim->currentFrame();
-        if (!frame.isNull()) {
-            p->drawPixmap(0, 0, frame);
-            p->restore();
-            return;
-        }
+    // ── Resolve the frame to draw ──
+    QPixmap frame;
+
+    if (m_currentAnim && m_currentAnim->isRunning()) {
+        frame = m_currentAnim->currentFrame();
+    } else if (!m_idleFrame.isNull()) {
+        frame = m_idleFrame;
+    } else if (m_spriteAnim && m_spriteAnim->isRunning()) {
+        frame = m_spriteAnim->currentFrame();
+    } else if (!m_spriteFrame.isNull()) {
+        frame = m_spriteFrame;
     }
 
-    // ── Single sprite frame fallback ──
-    if (!m_spriteFrame.isNull()) {
-        p->drawPixmap(0, 0, m_spriteFrame);
+    if (!frame.isNull()) {
+        // Flip horizontally when facing left
+        if (m_dir == -1) {
+            frame = frame.transformed(QTransform().scale(-1, 1), Qt::SmoothTransformation);
+        }
+        p->drawPixmap(0, 0, frame);
         p->restore();
         return;
     }

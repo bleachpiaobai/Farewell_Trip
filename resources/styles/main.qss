@@ -8,6 +8,28 @@
 }
 
 /* ============================================================
+   Window Control Buttons (top-right corner)
+   ============================================================ */
+QPushButton#btnMinimize,
+QPushButton#btnMaximize,
+QPushButton#btnClose {
+    background: rgba(0, 0, 0, 80);
+    border: 1px solid rgba(255, 255, 255, 40);
+    border-radius: 4px;
+}
+
+QPushButton#btnMinimize:hover,
+QPushButton#btnMaximize:hover {
+    background: rgba(255, 255, 255, 60);
+    border-color: rgba(255, 255, 255, 120);
+}
+
+QPushButton#btnClose:hover {
+    background: rgba(220, 50, 50, 180);
+    border-color: rgba(255, 100, 100, 200);
+}
+
+/* ============================================================
    Dialogue Box
    ============================================================ */
 DialogueBox {
@@ -118,4 +140,27 @@ PauseMenu QPushButton {
 PauseMenu QPushButton:hover {
     background: rgba(255, 255, 255, 25);
     border-color: rgba(255, 255, 255, 180);
+}
+
+/* ============================================================
+   Fail Screen
+   ============================================================ */
+FailScreen QPushButton {
+    color: #EAEAEA;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 12px 48px;
+    border: 2px solid rgba(255, 80, 80, 180);
+    border-radius: 6px;
+    background: rgba(180, 40, 40, 120);
+    min-width: 200px;
+}
+
+FailScreen QPushButton:hover {
+    background: rgba(220, 60, 60, 180);
+    border-color: rgba(255, 120, 120, 230);
+}
+
+FailScreen QPushButton:pressed {
+    background: rgba(140, 20, 20, 200);
 }

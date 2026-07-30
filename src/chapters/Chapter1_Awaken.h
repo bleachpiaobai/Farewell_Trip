@@ -3,8 +3,8 @@
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  第一章  少女！从沉睡中苏醒                                ║
-// ║  YAN 在废弃仓库密室中苏醒，接收神秘指令，踏上旅途            ║
-// ║  三张图片 + 对话，带淡入淡出过渡                            ║
+// ║  生日回忆 → 系统重启 → 觉醒 → 出发觅食 → 苏醒视频          ║
+// ║  四张图片 + 对话 + 视频，带淡入淡出过渡                     ║
 // ╚══════════════════════════════════════════════════════════╝
 
 class Chapter1_Awaken : public ChapterBase {
@@ -19,11 +19,12 @@ public:
     ChapterInfo currentInfo() const override;
 
 private:
-    enum Phase { IMAGE_1, IMAGE_2, IMAGE_3, DONE };
+    enum Phase { BIRTHDAY, REBOOT, AWAKEN, HUNGRY, VIDEO_AWAKE, DONE };
     void switchToPhase(Phase phase);
     void startTransitionTo(Phase nextPhase);
 
-    Phase m_phase = IMAGE_1;
+    Phase m_phase = BIRTHDAY;
     bool  m_done  = false;
     bool  m_transitioning = false;
+    bool  m_cutscenePending = false;
 };

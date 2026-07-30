@@ -1,12 +1,17 @@
 #pragma once
 #include "chapters/ChapterBase.h"
-#include <QTimer>
 #include <QStringList>
+#include <QList>
 
-// ╔══════════════════════════════════════════════════════════╗
-// ║  第五章  少女！告别银河旅行                                ║
-// ║  终章诗歌 —— 游戏完结画面                                  ║
-// ╚══════════════════════════════════════════════════════════╝
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  第五章  少女！银河告别旅行                                  ║
+// ║  开场视频 → 记忆蒙太奇 → 地球告别循环 → 结尾视频 → 结束       ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+struct SlideData {
+    QString imagePath;
+    QString dialogue;     // 空字符串 = 自动跳过
+};
 
 class Chapter5_Farewell : public ChapterBase {
     Q_OBJECT
@@ -16,15 +21,18 @@ public:
     void onEnter() override;
     void onExit() override;
     void update() override;
-    bool isComplete() const override { return false; }  // 终章不结束
+    bool isComplete() const override { return m_done; }
     ChapterInfo currentInfo() const override;
 
-private slots:
-    void onSlideshowTick();
-
 private:
-    bool m_started = false;
-    QTimer* m_slideshowTimer = nullptr;
-    QStringList m_slides;
+    void showMemorySlide(int index);
+    void advanceSlide();
+
+    enum Phase { OPENING, SLIDESHOW, EARTH_FAREWELL, ENDING_VIDEO };
+    Phase m_phase = OPENING;
     int m_slideIndex = 0;
+    int m_earthCycleCount = 0;  // track how many times we've cycled
+    bool m_cutscenePending = false;
+    bool m_autoSkip = false;
+    bool m_done = false;
 };

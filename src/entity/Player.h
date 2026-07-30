@@ -24,6 +24,9 @@ public:
     void setHp(int hp);
     void takeDamage(int dmg);
 
+    /// Reset player state for a new game (HP, animation, effects)
+    void resetState();
+
     // ── Input ──
     void moveLeft();
     void moveRight();
@@ -45,6 +48,7 @@ public:
 signals:
     void hpChanged(int current, int max);
     void attackTriggered();
+    void playerDied();
 
 private:
     void loadSprites();
@@ -75,8 +79,8 @@ private:
     QPixmap m_idleFrame;       // single frame when idle
 
     // ── Play area ──
-    static constexpr int W = 60;
-    static constexpr int H = 110;
+    static constexpr int W = 100;
+    static constexpr int H = 180;
 };
 
 #endif // PLAYER_H

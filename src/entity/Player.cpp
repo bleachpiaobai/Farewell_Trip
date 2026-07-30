@@ -36,30 +36,30 @@ void Player::loadSprites()
 {
     // ── Walk animation (10 frames) ──
     m_animWalk = new SpriteAnimation(this);
-    m_animWalk->setFrames(loadFrames(":/images/yan_action/walk", 10));
+    m_animWalk->setFrames(loadFrames(GameConfig::imagePath(":/images/YAN_Action/walk"), 10));
     m_animWalk->setFrameDuration(80);  // ~12.5 fps
     connect(m_animWalk, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
 
     // ── Jump animation (7 frames) ──
     m_animJump = new SpriteAnimation(this);
-    m_animJump->setFrames(loadFrames(":/images/yan_action/jump", 7));
+    m_animJump->setFrames(loadFrames(GameConfig::imagePath(":/images/YAN_Action/jump"), 7));
     m_animJump->setFrameDuration(70);
     connect(m_animJump, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
 
     // ── Attack animation (7 frames, "ack" folder) ──
     m_animAttack = new SpriteAnimation(this);
-    m_animAttack->setFrames(loadFrames(":/images/yan_action/ack", 7));
+    m_animAttack->setFrames(loadFrames(GameConfig::imagePath(":/images/YAN_Action/ack"), 7));
     m_animAttack->setFrameDuration(60);  // ~16 fps — snappy
     connect(m_animAttack, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
 
     // ── Die animation (5 frames) ──
     m_animDie = new SpriteAnimation(this);
-    m_animDie->setFrames(loadFrames(":/images/yan_action/die", 5));
+    m_animDie->setFrames(loadFrames(GameConfig::imagePath(":/images/YAN_Action/die"), 5));
     m_animDie->setFrameDuration(120);  // slower, dramatic
     connect(m_animDie, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
 
     // ── Idle: use first walk frame ──
-    QPixmap idle(":/images/yan_action/walk/1.png");
+    QPixmap idle(GameConfig::imagePath(":/images/YAN_Action/walk/1.png"));
     if (!idle.isNull()) {
         m_idleFrame = idle.scaled(W, H, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     }
@@ -112,14 +112,34 @@ QPainterPath Player::shape() const
 
 void Player::setHp(int hp)
 {
+    int prevHp = m_hp;
     m_hp = MathUtils::clamp(hp, 0, m_maxHp);
     emit hpChanged(m_hp, m_maxHp);
     update();
+
+    if (m_hp <= 0 && prevHp > 0) {
+        emit playerDied();
+    }
 }
 
 void Player::takeDamage(int dmg)
 {
     setHp(m_hp - dmg);
+}
+
+void Player::resetState()
+{
+    m_hp = m_maxHp;
+    m_dir = 1;
+    m_attackTimer = 0;
+    m_jumping = false;
+    m_velocityY = 0.0;
+    m_anim = GameConfig::AnimState::IDLE;
+    if (m_currentAnim) {
+        m_currentAnim->stop();
+        m_currentAnim = nullptr;
+    }
+    update();
 }
 
 // ── Input ─────────────────────────────────────────────────

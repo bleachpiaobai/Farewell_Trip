@@ -4,6 +4,7 @@
 #include <QGraphicsTextItem>
 #include <QGraphicsRectItem>
 #include <QGraphicsWidget>
+#include <QGraphicsSceneMouseEvent>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsProxyWidget>
 #include <QProgressBar>
@@ -12,13 +13,31 @@
 class Player;
 class QGraphicsOpacityEffect;
 
-// ── Scene title overlay (top center) ───────────────────
+// ── Chapter Title Card — full-screen black opening screen ──
 
-class SceneTitleLabel : public QGraphicsTextItem
+class ChapterTitleCard : public QGraphicsObject
 {
+    Q_OBJECT
 public:
-    explicit SceneTitleLabel(QGraphicsItem* parent = nullptr);
-    void setTitle(const QString& title, const QString& hint = QString());
+    explicit ChapterTitleCard(QGraphicsItem* parent = nullptr);
+
+    QRectF boundingRect() const override;
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
+               QWidget* widget) override;
+
+    void show(const QString& title);
+    void hide();
+
+    bool isVisible() const { return QGraphicsObject::isVisible(); }
+
+signals:
+    void dismissed();  // user clicked or timer expired
+
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
+private:
+    QString m_title;
 };
 
 // ── Player HP Bar (top-left corner) ────────────────────
@@ -72,6 +91,9 @@ class DialogueBox : public QGraphicsRectItem
 public:
     explicit DialogueBox(QGraphicsItem* parent = nullptr);
 
+    /// Set the speaker name (shown immediately, styled)
+    void setSpeaker(const QString& speaker);
+    /// Set the dialogue text (revealed with typewriter effect)
     void setText(const QString& text);
     void showNextIndicator(bool visible);
     void show();
@@ -80,8 +102,9 @@ public:
     bool isVisible() const { return QGraphicsRectItem::isVisible(); }
 
 private:
-    QGraphicsTextItem* m_textItem = nullptr;
-    QGraphicsTextItem* m_nextHint = nullptr;
+    QGraphicsTextItem* m_speakerItem = nullptr;  // speaker name line
+    QGraphicsTextItem* m_textItem    = nullptr;  // dialogue text line
+    QGraphicsTextItem* m_nextHint    = nullptr;  // "press space to continue"
 };
 
 #endif // HUD_H
