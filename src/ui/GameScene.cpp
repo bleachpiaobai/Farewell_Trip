@@ -20,6 +20,14 @@ GameScene::GameScene(QObject* parent)
     addItem(m_imageBg);
 }
 
+void GameScene::setSceneWidth(int width)
+{
+    setSceneRect(0, 0, width, GameConfig::WINDOW_HEIGHT);
+    m_background->setRect(sceneRect());
+    if (m_imageBg)
+        m_imageBg->setSceneSize(width, GameConfig::WINDOW_HEIGHT);
+}
+
 void GameScene::setBackgroundColor(const QColor& color)
 {
     m_background->setBrush(color);

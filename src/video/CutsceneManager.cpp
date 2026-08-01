@@ -85,7 +85,7 @@ void CutsceneManager::playCutscene(const QString& name, const QString& videoPath
 
 void CutsceneManager::skip()
 {
-    if (!m_playing) return;
+    if (!m_playing || !m_skippable) return;
 
     qDebug() << "[Cutscene] Skipped:" << m_currentName;
     m_player->stop();
@@ -107,14 +107,15 @@ void CutsceneManager::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
     switch (status) {
     case QMediaPlayer::EndOfMedia:
         qDebug() << "[Cutscene] Ended naturally:" << m_currentName;
-        cleanup();
+        m_playing = false;
+        // 不在这里 cleanup，由章节在下一帧统一处理，避免闪烁
         emit cutsceneFinished(m_currentName);
         break;
 
     case QMediaPlayer::InvalidMedia:
         qWarning() << "[Cutscene] Invalid media:" << m_currentName;
         cleanup();
-        emit cutsceneFinished(m_currentName);   // 失败即放行
+        emit cutsceneFinished(m_currentName);
         break;
 
     default:
@@ -139,4 +140,6 @@ void CutsceneManager::cleanup()
     m_player->stop();
     m_videoItem->hide();
     m_playing = false;
+    // 强制全场景立即刷新，消除 hide 后短暂残留
+    m_scene->update();
 }

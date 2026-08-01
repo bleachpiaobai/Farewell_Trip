@@ -27,4 +27,5 @@ private:
     bool  m_done  = false;
     bool  m_transitioning = false;
     bool  m_cutscenePending = false;
+    bool  m_videoWait = false;
 };

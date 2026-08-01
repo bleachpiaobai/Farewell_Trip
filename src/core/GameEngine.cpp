@@ -56,6 +56,7 @@ GameEngine::GameEngine(MainWindow* window, QObject* parent)
     m_dialogueMgr = new DialogueManager(m_eventBus, this);
     m_combatSys   = new CombatSystem(m_eventBus, this);
     m_combatSys->setPlayer(m_player);
+    m_combatSys->setScene(m_gameScene);
 
     // ── 过场视频管理器 ──
     m_cutsceneMgr = new CutsceneManager(m_gameScene, this);
@@ -133,6 +134,25 @@ void GameEngine::wireConnections()
     connect(m_window->menuWidget(), &MainMenu::startGameRequested,
             this, &GameEngine::onMenuStartGame);
 
+    // ── 全部章节结束 → 返回菜单 ──
+    connect(m_sceneMgr, &SceneManager::gameCompleted, this, [this]() {
+        m_timer->stop();
+        m_running = false;
+        m_state = GameConfig::GameState::MAIN_MENU;
+        m_window->showMenu();
+    });
+
+    // ── 失败画面 → 返回菜单（需要清理状态） ──
+    connect(m_window, &MainWindow::returnToMenuRequested, this, [this]() {
+        m_timer->stop();
+        m_running = false;
+        m_state = GameConfig::GameState::MAIN_MENU;
+        m_player->resetState();
+        m_player->setVisible(true);
+        m_combatSys->endCombat();
+        m_window->showMenu();
+    });
+
     // ── 玩家 HP → 左上角血条 ──
     connect(m_player, &Player::hpChanged,
             m_playerHpBar, &PlayerHPBar::onHpChanged);
@@ -144,6 +164,10 @@ void GameEngine::wireConnections()
         m_player->setVisible(false);   // 隐藏角色，不在失败画面中出现
         m_window->showFailScreen();
     });
+
+    // ── 玩家攻击动画第 5 帧 → 发射火球 ──
+    connect(m_player, &Player::attackTriggered,
+            m_combatSys, &CombatSystem::onPlayerAttack);
 
     // ── Boss 战斗 → 底部血条 ──
     connect(m_combatSys, &CombatSystem::bossSpawned,
@@ -205,6 +229,9 @@ void GameEngine::onTick()
         m_dialogueMgr->onTick();
         m_combatSys->onTick();
     }
+
+    // ── 镜头跟随玩家（宽场景时自动滚动） ──
+    m_gameView->setCamera(m_player->x() + 50.0, m_gameScene->sceneRect().width());
 
     m_sceneMgr->onTick();       // 章节更新仍需运行（轮询视频结束）
     m_transition->onTick();
@@ -269,10 +296,9 @@ void GameEngine::processInput()
     if (m_input->isKeyPressed(Qt::Key_K))
         m_player->jump();
 
-    // ── 攻击 (J) ──
+    // ── 攻击 (J) — 火球由动画第 5 帧通过信号发射 ──
     if (m_input->isKeyPressed(Qt::Key_J)) {
         m_player->attack();
-        m_combatSys->onPlayerAttack();
     }
 
     // ── 对话推进 (空格 / 鼠标) ──

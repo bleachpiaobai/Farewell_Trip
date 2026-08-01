@@ -7,9 +7,9 @@
 #include "ui/GameScene.h"
 #include "core/GameConfig.h"
 
-// ── 本章专属对话 ──────────────────────────────────────
+// ── 本章专属对话（严格按照 Farewell_Trip.doc） ──────
 
-// XIA 遭遇：废土深处的守护者
+// XIA 遭遇：废土深处的守护者 —— ch03_rebellion/XIA_Stand.png
 static const QStringList XIA_ENCOUNTER_SCRIPT = {
     QStringLiteral("XIA：入侵者！"),
     QStringLiteral("XIA：你的机体让我感觉很熟悉，似乎很久以前见过。"),
@@ -17,7 +17,7 @@ static const QStringList XIA_ENCOUNTER_SCRIPT = {
     QStringLiteral("XIA：不管是谁，侵犯者唯有受死！干扰\"Farewell_Trip\"正常进行了只有死"),
 };
 
-// XIA 战败（第一段）：悔恨与解脱
+// XIA 战败（第一段）：悔恨与解脱 —— ch03_rebellion/XIA_Die1.png
 static const QStringList XIA_DEFEAT1_SCRIPT = {
     QStringLiteral("XIA：岁月的磨损真是可怕"),
     QStringLiteral("XIA：没想到我竟然被你打败"),
@@ -27,16 +27,20 @@ static const QStringList XIA_DEFEAT1_SCRIPT = {
     QStringLiteral("XIA：但所有阻碍\"Farewell_Trip\"、擅自偏离秩序的人，最终都会被清除。"),
 };
 
-// XIA 战败（第二段）：残酷真相
+// XIA 战败（第二段）：残酷真相 —— ch03_rebellion/XIA_Die2.png
 static const QStringList XIA_DEFEAT2_SCRIPT = {
     QStringLiteral("XIA：你能走到这里算你侥幸。"),
     QStringLiteral("XIA：但这片废土驻守着全世界最残酷的机械士兵，你根本没有逃离的可能。我们所有人，都只有一个结局！"),
     QStringLiteral("XIA：在这里等待毁灭的一天！"),
+};
+
+// YAN 竖起手指 —— ch03_rebellion/YAN_Finger.png
+static const QStringList YAN_FINGER_SCRIPT = {
     QStringLiteral("YAN：等待毁灭吗？"),
 };
 
-// YAN 的决心：向日葵下的宣告
-static const QStringList YAN_RESOLVE_SCRIPT = {
+// YAN 握拳 —— ch03_rebellion/YAN_Fist.png
+static const QStringList YAN_FIST_SCRIPT = {
     QStringLiteral("YAN：我不会坐以待毙！"),
 };
 
@@ -72,6 +76,19 @@ void Chapter3_Rebellion::update()
     if (m_cutscenePending) {
         if (!m_cutscene || !m_cutscene->isPlaying()) {
             m_cutscenePending = false;
+            if (m_cutscene) m_cutscene->cleanup();
+            if (m_phase == XIA_VIDEO) {
+                m_videoWait = true;
+                m_dialogue->loadScript({QStringLiteral(" ")});
+            }
+        }
+        return;
+    }
+
+    // 视频播完后等待点击
+    if (m_videoWait) {
+        if (m_dialogue->isOver()) {
+            m_videoWait = false;
             if (m_phase == XIA_VIDEO) {
                 m_phase = XIA_FIGHT;
             }
@@ -81,34 +98,36 @@ void Chapter3_Rebellion::update()
 
     switch (m_phase) {
 
-    // ── 废土深处 → 向右走，遭遇 XIA ──
+    // ── 阶段1：废土深处 → 向右走，遭遇 XIA ──
     case WASTELAND_DEEP:
         if (m_player->x() > GameConfig::SCENE_EXIT_X) {
             m_phase = XIA_ENCOUNTER;
             m_player->hide();  // dialogue only from here
             m_scene->setBackgroundColor(QColor(50, 45, 65));
-            m_scene->setBackgroundImage(":/images/ch03_rebellion/YAN_Fight_XIA.png");
+            m_scene->setBackgroundImage(":/images/ch03_rebellion/XIA_Stand.png");
             m_player->setPos(100, 530);
             m_dialogue->loadScript(XIA_ENCOUNTER_SCRIPT);
         }
         break;
 
-    // ── XIA 遭遇对话 → 战斗视频 ──
+    // ── 阶段2：XIA 遭遇独白 → 战斗视频 ──
     case XIA_ENCOUNTER:
         if (m_dialogue->isOver()) {
             m_phase = XIA_VIDEO;
             m_cutscenePending = true;
+            // 先设战后背景再播视频，避免视频结束露出旧图
             m_scene->setBackgroundImage(":/images/ch03_rebellion/YAN_Fight_XIA.png");
             if (m_cutscene)
                 m_cutscene->playCutscene("YAN_Fight_XIA", "videos/ch03_rebellion/YAN_Fight_XIA.mp4");
         }
         break;
 
-    // ── XIA BOSS 战 ──
+    // ── 阶段3：BOSS 战 —— ch03_rebellion/YAN_Fight_XIA.png ──
     case XIA_FIGHT:
         if (!m_bossSpawned) {
             m_bossSpawned = true;
             m_player->show();  // YAN appears for boss fight
+            m_scene->setBackgroundImage(":/images/ch03_rebellion/Background.png");
             m_boss = createExGirlBoss();
             m_scene->addItem(m_boss);
             m_combat->startCombat(m_boss);
@@ -123,7 +142,7 @@ void Chapter3_Rebellion::update()
         }
         break;
 
-    // ── XIA 战败第一段：悔恨与解脱 ──
+    // ── 阶段4：XIA 战败 — 悔恨与解脱 —— XIA_Die1.png ──
     case XIA_DEFEAT1:
         if (m_dialogue->isOver()) {
             m_phase = XIA_DEFEAT2;
@@ -132,17 +151,39 @@ void Chapter3_Rebellion::update()
         }
         break;
 
-    // ── XIA 战败第二段：残酷真相 ──
+    // ── 阶段5：XIA 战败 — 残酷真相 —— XIA_Die2.png ──
     case XIA_DEFEAT2:
         if (m_dialogue->isOver()) {
-            m_phase = YAN_RESOLVE;
-            m_scene->setBackgroundImage(":/images/ch03_rebellion/YAN_Like_Sunflower.png");
-            m_dialogue->loadScript(YAN_RESOLVE_SCRIPT);
+            m_phase = XIA_FINGER;
+            m_scene->setBackgroundImage(":/images/ch03_rebellion/YAN_Finger.png");
+            m_dialogue->loadScript(YAN_FINGER_SCRIPT);
         }
         break;
 
-    // ── YAN 的决心 → 第三章结束 ──
+    // ── 阶段6：YAN 竖起手指 —— YAN_Finger.png ──
+    case XIA_FINGER:
+        if (m_dialogue->isOver()) {
+            m_phase = XIA_FIST;
+            m_scene->setBackgroundImage(":/images/ch03_rebellion/YAN_Fist.png");
+            m_dialogue->loadScript(YAN_FIST_SCRIPT);
+        }
+        break;
+
+    // ── 阶段7：YAN 握拳 —— YAN_Fist.png ──
+    case XIA_FIST:
+        if (m_dialogue->isOver()) {
+            m_phase = YAN_RESOLVE;
+            m_scene->setBackgroundImage(":/images/ch03_rebellion/YAN_Like_Sunflower.png");
+        }
+        break;
+
+    // ── 阶段8：YAN 如向日葵般 —— YAN_Like_Sunflower.png → 第三章结束 ──
     case YAN_RESOLVE:
+        if (!m_resolveStarted) {
+            m_resolveStarted = true;
+            // 空脚本，仅让画面停留，按空格继续
+            m_dialogue->loadScript({QString()});
+        }
         if (m_dialogue->isOver()) {
             m_done = true;
             emit chapterFinished();
@@ -159,7 +200,9 @@ ChapterInfo Chapter3_Rebellion::currentInfo() const
     case XIA_FIGHT:      return { QStringLiteral("废土篇章 · 守护者XIA【BOSS战】"), QString(), QColor(50, 45, 65) };
     case XIA_DEFEAT1:    return { QStringLiteral("废土篇章 · XIA的悔恨"), QString(), QColor(45, 40, 60) };
     case XIA_DEFEAT2:    return { QStringLiteral("废土篇章 · 残酷真相"), QString(), QColor(40, 35, 55) };
-    case YAN_RESOLVE:    return { QStringLiteral("废土篇章 · 叛逆之拳"), QString(), QColor(50, 45, 30) };
+    case XIA_FINGER:     return { QStringLiteral("废土篇章 · 绝不屈服"), QString(), QColor(50, 45, 40) };
+    case XIA_FIST:       return { QStringLiteral("废土篇章 · 叛逆之拳"), QString(), QColor(50, 40, 30) };
+    case YAN_RESOLVE:    return { QStringLiteral("废土篇章 · 如向日葵般"), QString(), QColor(50, 45, 30) };
     }
     return {};
 }

@@ -44,6 +44,7 @@ public:
 signals:
     void chapterChanged(int index);
     void hudUpdate(const ChapterInfo& info);
+    void gameCompleted();  // 所有章节结束 → 返回菜单
 
 private slots:
     void onChapterFinished();

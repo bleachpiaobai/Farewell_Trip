@@ -20,6 +20,9 @@ public:
     bool isJumping() const { return m_jumping; }
     GameConfig::AnimState animState() const { return m_anim; }
     int dir() const { return m_dir; }
+    int attackDir() const { return m_attackDir; }  // locked at attack() call
+
+    void setMaxX(qreal maxX) { m_maxX = maxX; }
 
     void setHp(int hp);
     void takeDamage(int dmg);
@@ -62,6 +65,7 @@ private:
     int m_hp = 100;
     int m_maxHp = 100;
     int m_dir = 1;          // 1 = right, -1 = left
+    int m_attackDir = 1;    // direction locked at attack() call
     int m_attackTimer = 0;
     GameConfig::AnimState m_anim = GameConfig::AnimState::IDLE;
 
@@ -78,9 +82,12 @@ private:
 
     QPixmap m_idleFrame;       // single frame when idle
 
-    // ── Play area ──
+    // ── Play area (public for chapter bounds) ──
+public:
     static constexpr int W = 100;
     static constexpr int H = 180;
+private:
+    qreal m_maxX = GameConfig::WINDOW_WIDTH - W;  // dynamic for wide scenes
 };
 
 #endif // PLAYER_H

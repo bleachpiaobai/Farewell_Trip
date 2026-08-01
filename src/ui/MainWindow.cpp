@@ -164,7 +164,9 @@ void MainWindow::showFailScreen()
         m_failScreen->setFailImage(GameConfig::imagePath(":/images/fail.png"));
         m_stack->addWidget(m_failScreen);  // index 2
 
-        connect(m_failScreen, &FailScreen::returnToMenuRequested, this, &MainWindow::showMenu);
+        connect(m_failScreen, &FailScreen::returnToMenuRequested, this, [this]() {
+            emit returnToMenuRequested();
+        });
     }
     m_stack->setCurrentWidget(m_failScreen);
 }

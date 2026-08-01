@@ -24,7 +24,9 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
 
 qt_standard_project_setup()
 
-# ── Collect all sources by directory ──────────────────────
+# ── Collect all sources by directory (re-run CMake after adding new files) ──
+#  New files (auto-picked by GLOB_RECURSE): combat/Projectile.cpp, combat/Laser.cpp
+#  CombatSystem now owns scene via setScene() — wired in GameEngine.cpp
 file(GLOB_RECURSE CORE_SRC     src/core/*.cpp     src/core/*.h)
 file(GLOB_RECURSE UI_SRC       src/ui/*.cpp       src/ui/*.h)
 file(GLOB_RECURSE SCENE_SRC    src/scene/*.cpp    src/scene/*.h)
@@ -38,6 +40,7 @@ file(GLOB_RECURSE UTILS_SRC    src/utils/*.cpp    src/utils/*.h)
 file(GLOB_RECURSE CHAPTER_SRC  src/chapters/*.cpp src/chapters/*.h)
 
 set(RESOURCES resources/resources.qrc)
+set(APP_ICON resources/app.rc)
 
 # ── Copy video files to build output ──
 file(GLOB_RECURSE VIDEO_FILES
@@ -79,6 +82,7 @@ qt_add_executable(Farewell_Trip
     ${UTILS_SRC}
     ${CHAPTER_SRC}
     ${RESOURCES}
+    ${APP_ICON}
 )
 
 target_include_directories(Farewell_Trip PRIVATE

@@ -30,23 +30,24 @@ constexpr int TARGET_FPS        = 60;
 constexpr int FRAME_INTERVAL_MS = 1000 / TARGET_FPS;   // ~16 ms
 
 // ── Player ──────────────────────────────────────────
-constexpr int PLAYER_MOVE_SPEED = 4;           // pixels per frame
+constexpr int PLAYER_MOVE_SPEED = 6;           // pixels per frame (wider dodge window)
 constexpr int PLAYER_HP          = 10;
 constexpr int ATTACK_RANGE       = 100;         // must be within 100 px
-constexpr int PLAYER_DAMAGE     = 2;
-constexpr int ATTACK_COOLDOWN    = 12;          // frames
+constexpr int PLAYER_DAMAGE     = 5;
+constexpr int ATTACK_COOLDOWN    = 33;          // frames — match 9×60ms=540ms animation
 constexpr qreal PLAYER_GROUND_Y  = 530.0;       // Y coordinate on ground (adjusted for larger sprite H=180)
-constexpr qreal JUMP_VELOCITY    = -16.0;       // initial upward speed (px/frame)
-constexpr qreal GRAVITY          = 0.9;         // downward acceleration per frame
+constexpr qreal JUMP_VELOCITY    = -20.0;       // initial upward speed — high enough to clear bullets
+constexpr qreal GRAVITY          = 0.85;        // downward acceleration — floaty dodge window
 
 // ── Boss ────────────────────────────────────────────
 constexpr int BOSS_APPROACH_DISTANCE = 100;
-constexpr int PEACH_BOSS_HP   = 80;
+constexpr int PEACH_BOSS_HP   = 100;
 constexpr int EXGIRL_BOSS_HP  = 100;
 constexpr int ANGUS_BOSS_HP   = 120;
 
 // ── Scene Exit ──────────────────────────────────────
-constexpr int SCENE_EXIT_X = 1100;            // walk right past this to advance
+constexpr int SCENE_EXIT_X    = 1100;         // walk right past this to advance
+constexpr int WALK_SCENE_WIDTH = 3000;        // wide scene for chapters 2 & 3
 
 // ── Dialogue ────────────────────────────────────────
 constexpr int DIALOGUE_CHARS_PER_SEC = 20;

@@ -33,8 +33,8 @@ GameView::GameView(QGraphicsScene* scene, QWidget* parent)
     // Set logical scene size; the view will scale to fit
     setSceneRect(0, 0, GameConfig::WINDOW_WIDTH, GameConfig::WINDOW_HEIGHT);
 
-    // Fit the scene into the view, maintaining aspect ratio (no distortion)
-    fitInView(sceneRect(), Qt::KeepAspectRatio);
+    // Camera following (no-op when scene == viewport)
+    updateViewTransform();
     setBackgroundBrush(Qt::black);
 
     // Let the view resize freely — content scales via fitInView
@@ -63,5 +63,23 @@ void GameView::mousePressEvent(QMouseEvent* event)
 void GameView::resizeEvent(QResizeEvent* event)
 {
     QGraphicsView::resizeEvent(event);
-    fitInView(sceneRect(), Qt::KeepAspectRatio);
+    updateViewTransform();
+}
+
+void GameView::setCamera(qreal playerX, qreal sceneWidth)
+{
+    m_cameraX = playerX;
+    m_sceneWidth = sceneWidth;
+    updateViewTransform();
+}
+
+void GameView::updateViewTransform()
+{
+    // Camera: center on player with ~40% offset from left, clamped to scene bounds
+    qreal maxCamLeft = qMax(0.0, m_sceneWidth - GameConfig::WINDOW_WIDTH);
+    qreal camLeft = m_cameraX - GameConfig::WINDOW_WIDTH * 0.4;
+    camLeft = qBound(0.0, camLeft, maxCamLeft);
+
+    QRectF visibleRect(camLeft, 0, GameConfig::WINDOW_WIDTH, GameConfig::WINDOW_HEIGHT);
+    fitInView(visibleRect, Qt::KeepAspectRatio);
 }

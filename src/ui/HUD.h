@@ -102,6 +102,8 @@ public:
     bool isVisible() const { return QGraphicsRectItem::isVisible(); }
 
 private:
+    static QColor speakerColor(const QString& speaker);
+
     QGraphicsTextItem* m_speakerItem = nullptr;  // speaker name line
     QGraphicsTextItem* m_textItem    = nullptr;  // dialogue text line
     QGraphicsTextItem* m_nextHint    = nullptr;  // "press space to continue"

@@ -143,5 +143,7 @@ void SceneManager::onChapterFinished()
     int next = m_index + 1;
     if (next < m_chapters.size()) {
         switchToChapter(next);
+    } else {
+        emit gameCompleted();
     }
 }

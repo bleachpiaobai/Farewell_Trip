@@ -85,10 +85,19 @@ void Chapter1_Awaken::update()
     if (m_cutscenePending) {
         if (!m_cutscene || !m_cutscene->isPlaying()) {
             m_cutscenePending = false;
-            if (m_phase == VIDEO_AWAKE) {
-                m_done = true;
-                emit chapterFinished();
-            }
+            if (m_cutscene) m_cutscene->cleanup();
+            m_videoWait = true;
+            m_dialogue->loadScript({QStringLiteral(" ")});
+        }
+        return;
+    }
+
+    // 视频播完后等待点击
+    if (m_videoWait) {
+        if (m_dialogue->isOver()) {
+            m_videoWait = false;
+            m_done = true;
+            emit chapterFinished();
         }
         return;
     }
@@ -117,6 +126,7 @@ void Chapter1_Awaken::update()
         if (m_dialogue->isOver()) {
             m_phase = VIDEO_AWAKE;
             m_cutscenePending = true;
+            m_scene->clearBackgroundImage();  // 视频下铺黑屏，播完不闪旧图
             if (m_cutscene)
                 m_cutscene->playCutscene("YAN_Awake", "videos/ch01_awaken/YAN_Awake.mp4");
         }

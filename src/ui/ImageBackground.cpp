@@ -15,7 +15,7 @@ ImageBackground::ImageBackground(QGraphicsItem* parent)
 
 QRectF ImageBackground::boundingRect() const
 {
-    return QRectF(0, 0, GameConfig::WINDOW_WIDTH, GameConfig::WINDOW_HEIGHT);
+    return QRectF(0, 0, m_sceneW, m_sceneH);
 }
 
 void ImageBackground::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*)
@@ -23,8 +23,14 @@ void ImageBackground::paint(QPainter* painter, const QStyleOptionGraphicsItem*, 
     if (m_pixmap.isNull()) return;
 
     painter->setRenderHint(QPainter::SmoothPixmapTransform);
-    QRectF target(0, 0, GameConfig::WINDOW_WIDTH, GameConfig::WINDOW_HEIGHT);
+    QRectF target(0, 0, m_sceneW, m_sceneH);
     painter->drawPixmap(target, m_pixmap, m_pixmap.rect());
+}
+
+void ImageBackground::setSceneSize(qreal w, qreal h)
+{
+    m_sceneW = w;
+    m_sceneH = h;
 }
 
 void ImageBackground::setImage(const QString& qrcPath)
@@ -39,14 +45,13 @@ void ImageBackground::setImage(const QString& qrcPath)
 
 void ImageBackground::setImage(const QPixmap& pixmap)
 {
-    m_pixmap = pixmap.scaled(GameConfig::WINDOW_WIDTH, GameConfig::WINDOW_HEIGHT,
+    m_pixmap = pixmap.scaled(static_cast<int>(m_sceneW), static_cast<int>(m_sceneH),
                              Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
     // Center-crop to exact scene size
-    if (m_pixmap.width() > GameConfig::WINDOW_WIDTH ||
-        m_pixmap.height() > GameConfig::WINDOW_HEIGHT) {
-        int x = (m_pixmap.width() - GameConfig::WINDOW_WIDTH) / 2;
-        int y = (m_pixmap.height() - GameConfig::WINDOW_HEIGHT) / 2;
-        m_pixmap = m_pixmap.copy(x, y, GameConfig::WINDOW_WIDTH, GameConfig::WINDOW_HEIGHT);
+    if (m_pixmap.width() > m_sceneW || m_pixmap.height() > m_sceneH) {
+        int x = static_cast<int>((m_pixmap.width() - m_sceneW) / 2);
+        int y = static_cast<int>((m_pixmap.height() - m_sceneH) / 2);
+        m_pixmap = m_pixmap.copy(x, y, static_cast<int>(m_sceneW), static_cast<int>(m_sceneH));
     }
     update();
 }

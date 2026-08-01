@@ -20,6 +20,7 @@ public:
     void setGameView(GameView* view);
     QStackedWidget* stack() const { return m_stack; }
     MainMenu* menuWidget() const { return m_menu; }
+    FailScreen* failScreen() const { return m_failScreen; }
 
     void showMenu();
     void showGame();
@@ -27,6 +28,7 @@ public:
 
 signals:
     void gameStarted();
+    void returnToMenuRequested();  // fail screen → menu（需要 GameEngine 清理状态）
 
 protected:
     void closeEvent(QCloseEvent* event) override;

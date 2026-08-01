@@ -5,7 +5,7 @@ class Enemy;
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  第三章  少女！向天空高举叛逆之拳                          ║
-// ║  废土深处 → 遭遇XIA → 战斗视频 → BOSS战 → 悔恨 → 决心     ║
+// ║  废土→XIA_Stand→视频→Boss战→Die1→Die2→Finger→Fist→葵    ║
 // ╚══════════════════════════════════════════════════════════╝
 
 class Chapter3_Rebellion : public ChapterBase {
@@ -21,11 +21,13 @@ public:
 
 private:
     enum Phase { WASTELAND_DEEP, XIA_ENCOUNTER, XIA_VIDEO, XIA_FIGHT,
-                 XIA_DEFEAT1, XIA_DEFEAT2, YAN_RESOLVE };
+                 XIA_DEFEAT1, XIA_DEFEAT2, XIA_FINGER, XIA_FIST, YAN_RESOLVE };
 
     Phase  m_phase = WASTELAND_DEEP;
     Enemy* m_boss  = nullptr;
     bool   m_done  = false;
     bool   m_bossSpawned = false;
     bool   m_cutscenePending = false;
+    bool   m_videoWait = false;
+    bool   m_resolveStarted = false;
 };

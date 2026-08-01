@@ -56,9 +56,23 @@ const QPixmap& SpriteAnimation::currentFrame() const
     return m_emptyFrame;
 }
 
+void SpriteAnimation::setLooping(bool looping)
+{
+    m_looping = looping;
+}
+
 void SpriteAnimation::onTimeout()
 {
     if (m_frames.isEmpty()) return;
+
+    // Non-looping: stop at last frame
+    if (!m_looping && m_currentIndex >= m_frames.size() - 1) {
+        m_running = false;
+        m_timer->stop();
+        emit finished();
+        return;
+    }
+
     m_currentIndex = (m_currentIndex + 1) % m_frames.size();
     emit frameChanged(m_currentIndex);
 }

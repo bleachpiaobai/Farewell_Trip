@@ -31,11 +31,18 @@ public:
     /// 播放视频 — name 仅用于日志/signal，videoPath 是相对于可执行目录的路径
     void playCutscene(const QString& name, const QString& videoPath);
 
-    /// 跳过当前视频（等同于播放结束）
+    /// 跳过当前视频（仅 ending0 允许跳过）
     void skip();
+
+    /// 当前视频是否允许跳过
+    bool skippable() const { return m_skippable; }
+    void setSkippable(bool s) { m_skippable = s; }
 
     /// 是否正在播放视频
     bool isPlaying() const;
+
+    /// 公开清理（章节在检测到视频结束后立即调用，消除闪烁）
+    void cleanup();
 
 signals:
     void cutsceneStarted(const QString& name);
@@ -46,14 +53,13 @@ private slots:
     void onPlaybackError(QMediaPlayer::Error error, const QString& errorString);
 
 private:
-    void cleanup();               // 停止播放、隐藏视频 item
-
     GameScene*          m_scene       = nullptr;
     QMediaPlayer*       m_player      = nullptr;
     QAudioOutput*       m_audioOutput = nullptr;
     QGraphicsVideoItem* m_videoItem   = nullptr;
 
     bool    m_playing      = false;
+    bool    m_skippable     = true;   // 默认可跳过
     QString m_currentName;
 };
 

@@ -14,6 +14,10 @@ public:
     /// Set a solid-color background by filling the scene rect.
     void setBackgroundColor(const QColor& color);
 
+    /// Set the scene width for scrolling chapters (>1280).
+    /// Resets to WINDOW_WIDTH by default. Updates scene rect and background.
+    void setSceneWidth(int width);
+
     /// Show a full-screen background image (scaled to fit).
     void setBackgroundImage(const QString& qrcPath);
 

@@ -293,12 +293,25 @@ DialogueBox::DialogueBox(QGraphicsItem* parent)
     m_nextHint->hide();
 }
 
+QColor DialogueBox::speakerColor(const QString& speaker)
+{
+    // 按角色发色区分
+    if (speaker == QStringLiteral("YAN"))    return QColor(180, 80, 30);     // 棕色
+    if (speaker == QStringLiteral("燕"))     return QColor(220, 160, 30);    // 金黄色（区别于YAN）
+    if (speaker == QStringLiteral("XIA"))    return QColor(218, 165, 32);    // 金色
+    if (speaker == QStringLiteral("Peach"))  return QColor(255, 105, 180);   // 粉色
+    if (speaker == QStringLiteral("Angus"))  return QColor(220, 20, 60);     // 红色
+    // 系统 / 其他 → 深蓝色（高饱和）
+    return QColor(30, 100, 220);
+}
+
 void DialogueBox::setSpeaker(const QString& speaker)
 {
     if (speaker.isEmpty()) {
         m_speakerItem->hide();
     } else {
         m_speakerItem->setPlainText(speaker);
+        m_speakerItem->setDefaultTextColor(speakerColor(speaker));
         m_speakerItem->show();
     }
 }

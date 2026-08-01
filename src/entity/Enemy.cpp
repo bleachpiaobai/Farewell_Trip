@@ -41,6 +41,8 @@ void Enemy::setSpriteSheet(const QString& qrcPrefix, int frameCount, int msPerFr
         QPixmap pix(path);
         if (!pix.isNull()) {
             pix = pix.scaledToHeight(H, Qt::SmoothTransformation);
+            m_frameW = qMax(m_frameW, static_cast<qreal>(pix.width()));
+            m_frameH = qMax(m_frameH, static_cast<qreal>(pix.height()));
             frames.append(pix);
         }
     }
@@ -63,16 +65,20 @@ void Enemy::setSpriteSheet(const QString& qrcPrefix, int frameCount, int msPerFr
 
 void Enemy::setWalkSprites(const QString& qrcPrefix, int frameCount, int msPerFrame)
 {
+    auto frames = loadFrames(qrcPrefix, frameCount, W, H);
+    for (const auto& f : frames) {
+        m_frameW = qMax(m_frameW, static_cast<qreal>(f.width()));
+        m_frameH = qMax(m_frameH, static_cast<qreal>(f.height()));
+    }
     m_animWalk = new SpriteAnimation(this);
-    m_animWalk->setFrames(loadFrames(qrcPrefix, frameCount, W, H));
+    m_animWalk->setFrames(frames);
     m_animWalk->setFrameDuration(msPerFrame);
     connect(m_animWalk, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
     // 不再连接 onJumpFrame — walk anim 不需要跳跃偏移
 
     // 用第一帧作为 idle
-    auto frames = m_animWalk->currentFrame();
-    if (!frames.isNull()) {
-        m_idleFrame = frames;
+    if (!frames.isEmpty()) {
+        m_idleFrame = frames.first();
     }
 
     // Start looping walk as default
@@ -81,8 +87,13 @@ void Enemy::setWalkSprites(const QString& qrcPrefix, int frameCount, int msPerFr
 
 void Enemy::setAttackSprites(const QString& qrcPrefix, int frameCount, int msPerFrame)
 {
+    auto frames = loadFrames(qrcPrefix, frameCount, W, H);
+    for (const auto& f : frames) {
+        m_frameW = qMax(m_frameW, static_cast<qreal>(f.width()));
+        m_frameH = qMax(m_frameH, static_cast<qreal>(f.height()));
+    }
     m_animAttack = new SpriteAnimation(this);
-    m_animAttack->setFrames(loadFrames(qrcPrefix, frameCount, W, H));
+    m_animAttack->setFrames(frames);
     m_animAttack->setFrameDuration(msPerFrame);
     connect(m_animAttack, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
 }
@@ -108,19 +119,26 @@ void Enemy::playAttackAnim()
 void Enemy::faceToward(qreal targetX)
 {
     qreal dx = targetX - x();
-    m_dir = (dx > 0) ? 1 : -1;
+    int newDir = (dx > 0) ? 1 : -1;
+    if (newDir != m_dir) {
+        prepareGeometryChange();
+        m_dir = newDir;
+    }
 }
 
 void Enemy::moveToward(qreal targetX, qreal speed)
 {
     qreal dx = targetX - x();
-    // Face the target
-    m_dir = (dx > 0) ? 1 : -1;
-    if (qAbs(dx) < 5.0) return;  // Already close enough
+    int newDir = (dx > 0) ? 1 : -1;
+    if (newDir != m_dir) {
+        prepareGeometryChange();
+        m_dir = newDir;
+    }
+    if (qAbs(dx) < 5.0) return;
 
     qreal move = qBound(-speed, dx, speed);
     setPos(x() + move, y());
-    m_baseX = x();  // Keep jump base position in sync with movement
+    m_baseX = x();
 }
 
 // ── Jump behavior ─────────────────────────────────────────
@@ -153,14 +171,23 @@ void Enemy::onJumpFrame(int frameIndex)
 
 QRectF Enemy::boundingRect() const
 {
-    // Extra width for attack sprites (XIA ack: 1022×700 → 204×140 after scale-to-height)
-    return QRectF(-5, -5, W + 80, H + 10);
+    qreal cw = (m_collisionW > 0) ? m_collisionW : m_frameW;
+    qreal ch = (m_collisionH > 0) ? m_collisionH : m_frameH;
+    // 右朝向时 sprite 画在 (0, 0)；左朝向时 flip 后画在 (W - m_frameW, 0)
+    if (m_dir == 1)
+        return QRectF(0, 0, cw, ch);
+    else
+        return QRectF(W - cw, 0, cw, ch);
 }
 
 QPainterPath Enemy::shape() const
 {
     QPainterPath path;
-    path.addEllipse(QRectF(0, 0, W, H));
+    QRectF rect = boundingRect();
+    // 椭圆碰撞体，略微内缩让手感自然
+    qreal mx = rect.width()  * 0.05;
+    qreal my = rect.height() * 0.05;
+    path.addEllipse(rect.adjusted(mx, my, -mx, -my));
     return path;
 }
 
@@ -219,9 +246,11 @@ void Enemy::drawBoss(QPainter* p)
     }
 
     if (!frame.isNull()) {
-        // Flip horizontally when facing left
+        // Flip horizontally when facing left — use painter transform
+        // so the flip axis stays at the character's body center (X=W)
         if (m_dir == -1) {
-            frame = frame.transformed(QTransform().scale(-1, 1), Qt::SmoothTransformation);
+            p->translate(W, 0);
+            p->scale(-1, 1);
         }
         p->drawPixmap(0, 0, frame);
         p->restore();

@@ -4,13 +4,14 @@
 #include <QList>
 
 // ╔══════════════════════════════════════════════════════════════╗
-// ║  第五章  少女！银河告别旅行                                  ║
-// ║  开场视频 → 记忆蒙太奇 → 地球告别循环 → 结尾视频 → 结束       ║
+// ║  第五章  少女！告别地球旅行                                  ║
+// ║  Farewell0→对话→Data视频→对话→Awake视频→对话→行走→幻灯片→   ║
+// ║  Farewell视频→地球告别→ending0→菜单                          ║
 // ╚══════════════════════════════════════════════════════════════╝
 
 struct SlideData {
     QString imagePath;
-    QString dialogue;     // 空字符串 = 自动跳过
+    QString dialogue;
 };
 
 class Chapter5_Farewell : public ChapterBase {
@@ -25,14 +26,15 @@ public:
     ChapterInfo currentInfo() const override;
 
 private:
-    void showMemorySlide(int index);
-    void advanceSlide();
+    void showSlide(const SlideData& slide);
 
-    enum Phase { OPENING, SLIDESHOW, EARTH_FAREWELL, ENDING_VIDEO };
+    enum Phase { OPENING, SYS_CALL, DATA_VIDEO, SYS_DATA,
+                 AWAKE_VIDEO, YAN_AWAKE, WALK2, WALK1,
+                 SLIDESHOW, MEMORY_VIDEO, SLIDESHOW2,
+                 FAREWELL_VIDEO, FAREWELL_SLIDE, ENDING_VIDEO };
     Phase m_phase = OPENING;
     int m_slideIndex = 0;
-    int m_earthCycleCount = 0;  // track how many times we've cycled
     bool m_cutscenePending = false;
-    bool m_autoSkip = false;
+    bool m_videoWait = false;
     bool m_done = false;
 };

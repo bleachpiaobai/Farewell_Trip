@@ -23,12 +23,16 @@ public:
     void restart();
     bool isRunning() const;
 
+    void setLooping(bool looping);
+    bool isLooping() const { return m_looping; }
+
     const QPixmap& currentFrame() const;
     int currentIndex() const { return m_currentIndex; }
     int frameCount() const { return m_frames.size(); }
 
 signals:
     void frameChanged(int index);
+    void finished();
 
 private slots:
     void onTimeout();
@@ -39,6 +43,7 @@ private:
     QTimer* m_timer;
     int m_currentIndex = 0;
     bool m_running = false;
+    bool m_looping = true;
 };
 
 #endif // SPRITEANIMATION_H

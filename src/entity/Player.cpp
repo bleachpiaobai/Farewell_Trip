@@ -46,11 +46,23 @@ void Player::loadSprites()
     m_animJump->setFrameDuration(70);
     connect(m_animJump, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
 
-    // ── Attack animation (7 frames, "ack" folder) ──
+    // ── Attack animation (9 frames, "ack" folder, play once) ──
     m_animAttack = new SpriteAnimation(this);
-    m_animAttack->setFrames(loadFrames(GameConfig::imagePath(":/images/YAN_Action/ack"), 7));
+    m_animAttack->setFrames(loadFrames(GameConfig::imagePath(":/images/YAN_Action/ack"), 9));
     m_animAttack->setFrameDuration(60);  // ~16 fps — snappy
+    m_animAttack->setLooping(false);     // play once, then return to idle
     connect(m_animAttack, &SpriteAnimation::frameChanged, this, [this](int) { update(); });
+    // 第 5 帧（index=4，~240ms）为挥刀命中帧 → 发射火球
+    connect(m_animAttack, &SpriteAnimation::frameChanged, this, [this](int index) {
+        if (index == 4) emit attackTriggered();
+    });
+    connect(m_animAttack, &SpriteAnimation::finished, this, [this]() {
+        if (m_anim == GameConfig::AnimState::ATTACK) {
+            m_anim = GameConfig::AnimState::IDLE;
+            m_currentAnim = nullptr;
+            update();
+        }
+    });
 
     // ── Die animation (5 frames) ──
     m_animDie = new SpriteAnimation(this);
@@ -148,7 +160,7 @@ void Player::moveLeft()
 {
     setPos(x() - GameConfig::PLAYER_MOVE_SPEED, y());
     m_dir = -1;
-    if (!m_jumping) {
+    if (!m_jumping && m_anim != GameConfig::AnimState::ATTACK) {
         m_anim = GameConfig::AnimState::WALK_LEFT;
         playAnim(m_animWalk);
     }
@@ -158,7 +170,7 @@ void Player::moveRight()
 {
     setPos(x() + GameConfig::PLAYER_MOVE_SPEED, y());
     m_dir = 1;
-    if (!m_jumping) {
+    if (!m_jumping && m_anim != GameConfig::AnimState::ATTACK) {
         m_anim = GameConfig::AnimState::WALK_RIGHT;
         playAnim(m_animWalk);
     }
@@ -169,10 +181,15 @@ void Player::attack()
     if (m_attackTimer > 0) {
         return;
     }
+    // 动画播放中不允许再次攻击
+    if (m_currentAnim == m_animAttack && m_currentAnim->isRunning()) {
+        return;
+    }
     m_attackTimer = GameConfig::ATTACK_COOLDOWN;
+    m_attackDir = m_dir;   // 锁定攻击方向，防止动画期间方向改变导致火球丢失
     m_anim = GameConfig::AnimState::ATTACK;
     playAnim(m_animAttack);
-    emit attackTriggered();
+    // attackTriggered() 由动画第 5 帧发射
 }
 
 void Player::jump()
@@ -202,9 +219,8 @@ void Player::stopMoving()
 
 void Player::tick()
 {
-    // ── Horizontal bounds ──
-    qreal cx = MathUtils::clamp(x(), 0.0,
-                                 static_cast<qreal>(GameConfig::WINDOW_WIDTH - W));
+    // ── Horizontal bounds (dynamic for wide scrolling scenes) ──
+    qreal cx = MathUtils::clamp(x(), 0.0, m_maxX);
     setPos(cx, y());
 
     // ── Jump physics ──
@@ -217,25 +233,28 @@ void Player::tick()
             newY = GameConfig::PLAYER_GROUND_Y;
             m_jumping = false;
             m_velocityY = 0.0;
-            m_anim = GameConfig::AnimState::IDLE;
-            if (m_currentAnim) {
-                m_currentAnim->stop();
-                m_currentAnim = nullptr;
+            if (m_anim != GameConfig::AnimState::ATTACK) {
+                m_anim = GameConfig::AnimState::IDLE;
+                if (m_currentAnim) {
+                    m_currentAnim->stop();
+                    m_currentAnim = nullptr;
+                }
             }
             update();
         }
         setPos(x(), newY);
     }
 
-    // ── Attack cooldown ──
+    // ── Attack cooldown (countdown only; animation plays to completion) ──
     if (m_attackTimer > 0) {
         m_attackTimer--;
-        if (m_attackTimer == 0 && m_anim == GameConfig::AnimState::ATTACK) {
+    }
+
+    // Fallback: return to idle if attack animation ended without signal
+    if (m_anim == GameConfig::AnimState::ATTACK) {
+        if (!m_currentAnim || !m_currentAnim->isRunning()) {
             m_anim = GameConfig::AnimState::IDLE;
-            if (m_currentAnim) {
-                m_currentAnim->stop();
-                m_currentAnim = nullptr;
-            }
+            m_currentAnim = nullptr;
             update();
         }
     }

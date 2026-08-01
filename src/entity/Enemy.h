@@ -47,6 +47,12 @@ public:
     /// @param jumpWidth   horizontal wobble amplitude in pixels
     void enableJumping(qreal jumpHeight = 50.0, qreal jumpWidth = 20.0);
 
+    /// Whether the enemy is currently airborne (jumping)
+    bool isAirborne() const { return m_jumpingEnabled && !m_dead && y() < m_baseY - 5.0; }
+
+    /// Override collision size (0 = use frame dimensions)
+    void setCollisionSize(qreal w, qreal h) { m_collisionW = w; m_collisionH = h; }
+
     QRectF boundingRect() const override;
     QPainterPath shape() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
@@ -83,6 +89,14 @@ private:
     qreal  m_baseX = 0.0;
     qreal  m_baseY = 0.0;
 
+    // Actual sprite frame dimensions (set when loading sprites)
+    qreal m_frameW = 140;
+    qreal m_frameH = 140;
+
+    // Override collision size (0 = use frame dimensions m_frameW/m_frameH)
+    qreal m_collisionW = 0;
+    qreal m_collisionH = 0;
+
     static constexpr int W = 140;
     static constexpr int H = 140;
 };
@@ -95,18 +109,20 @@ inline Enemy* createPeachBoss(QGraphicsItem* parent = nullptr)
                         QColor(GameConfig::PlaceholderColor::PeachBoss), parent);
     e->setPos(880, 520);
     e->setSpriteSheet(GameConfig::imagePath(":/images/Peach_Action"), 6, 120);
-    e->enableJumping(50.0, 20.0);  // 跳跃高度50px，左右摆动20px
+    e->enableJumping(30.0, 10.0);  // 跳跃高度30px（YAN可跳过），左右摆动10px
     return e;
 }
 
 inline Enemy* createExGirlBoss(QGraphicsItem* parent = nullptr)
 {
-    auto* e = new Enemy(QStringLiteral("旧日执念·前女友"), GameConfig::EXGIRL_BOSS_HP,
+    auto* e = new Enemy(QStringLiteral("XIA"), GameConfig::EXGIRL_BOSS_HP,
                         QColor(GameConfig::PlaceholderColor::ExGirlBoss), parent);
     e->setPos(880, 520);
     // 参照 YAN 的精灵结构：walk 动画 9 帧 + ack 攻击动画 8 帧
     e->setWalkSprites(GameConfig::imagePath(":/images/XIA_Action/walk"), 9, 100);
     e->setAttackSprites(GameConfig::imagePath(":/images/XIA_Action/ack"), 8, 80);
+    // walk 帧 1022px 宽（缩放到 204px）远大于实际角色 ~82px，手动收紧碰撞框
+    e->setCollisionSize(85, 135);
     return e;
 }
 

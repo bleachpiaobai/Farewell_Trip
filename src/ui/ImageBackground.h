@@ -16,6 +16,9 @@ public:
     void setImage(const QPixmap& pixmap);
     void clear();
 
+    /// Set the logical scene size (for wide scrolling backgrounds)
+    void setSceneSize(qreal w, qreal h);
+
     /// Animate opacity to target over durationMs
     void fadeTo(qreal targetOpacity, int durationMs);
 
@@ -29,6 +32,8 @@ signals:
 private:
     QPixmap m_pixmap;
     QPropertyAnimation* m_fadeAnim = nullptr;
+    qreal m_sceneW = 1280;
+    qreal m_sceneH = 720;
 };
 
 #endif // IMAGEBACKGROUND_H
